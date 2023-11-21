@@ -1,14 +1,12 @@
 package org.example;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Scanner;
-
 public class Main {
     static ArrayList<WebCrawlerData> webCrawlerDataBase=new ArrayList<>();
+    //String testUrl="https://books.toscrape.com/";
     public static void main(String[] args) {
-        //String testUrl="https://books.toscrape.com/";
         menu();
     }
     private static void menu(){
@@ -36,20 +34,17 @@ public class Main {
                 System.out.println("there is not yet any data in the data base!");
                 menu();
             }
-
         }
-
     }
     private static void insertUrl(){
         Scanner scanner=new Scanner(System.in);
         System.out.println("insert a url to start:");
         String url=scanner.nextLine();
         if(!isValidUrl(url)){System.out.println("the url you entered is not valid!");menu();}
-        WebCrawlerData webCrawlerData=WebCrawler.getPageLinks(url);
+        WebCrawlerData webCrawlerData=WebCrawler.getUrlInfo(url);
         if(webCrawlerData!=null){webCrawlerDataBase.add(webCrawlerData);}
         else {System.out.println("oops, something went wrong...");}
         menu();
     }
-
     private static boolean isValidUrl(String url){try {new URL(url);return true;} catch (MalformedURLException e) {return false;}}
 }
