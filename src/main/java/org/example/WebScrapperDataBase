@@ -1,0 +1,11 @@
+package org.example;
+
+public class WebScrapperDataBase {
+    String url;
+
+    public WebScrapperDataBase(String url){
+        this.url=url;
+    }
+    public String getUrl(){return url;}
+
+}
