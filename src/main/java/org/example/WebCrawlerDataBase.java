@@ -36,13 +36,13 @@ public class WebCrawlerDataBase {
     public String toString() {
         return
                 "\n url='" + url + '\'' +
-                ",\n iterationsCount=" + iterationsCount +
-                ",\n uniqueLinksCount=" + uniqueLinksCount +
-                ",\n linksList=" + linksList +
-                ",\n language='" + language + '\'' +
-                ",\n urlIPAddress='" + urlIPAddress + '\'' +
-                ",\n location='" + location + '\'' +
-                "\n";
+                        ",\n iterationsCount=" + iterationsCount +
+                        ",\n uniqueLinksCount=" + uniqueLinksCount +
+                        ",\n linksList=" + linksList +
+                        ",\n language='" + language + '\'' +
+                        ",\n urlIPAddress='" + urlIPAddress + '\'' +
+                        ",\n location='" + location + '\'' +
+                        "\n";
     }
 
 }
