@@ -1,11 +1,16 @@
 package org.example;
+import java.util.HashMap;
 
 public class WebScrapperDataBase {
-    String url;
+    private String url;
+    private HashMap<String,Integer> keyWordAppearanceCount;
 
-    public WebScrapperDataBase(String url){
+
+    public WebScrapperDataBase(String url,HashMap<String,Integer> keyWordAppearanceCount){
         this.url=url;
+        this.keyWordAppearanceCount=keyWordAppearanceCount;
     }
     public String getUrl(){return url;}
+    public HashMap<String,Integer> getKeyWordAppearanceCount(){return keyWordAppearanceCount;}
 
 }
