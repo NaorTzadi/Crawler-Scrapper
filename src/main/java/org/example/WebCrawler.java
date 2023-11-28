@@ -11,9 +11,9 @@ import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
 import java.util.ArrayList;
-public class WebCrawler {
 
-    public static WebCrawlerDataBase getUrlInfo(String url){
+public class WebCrawler {
+    public static WebCrawlerDataBase getAnalyzedInfo(String url){
         WebCrawlerDataBase webCrawlerData=new WebCrawlerDataBase(url,-1,-1, new ArrayList<>(),null,null,null);
 
         setPageLinksInfo(url,webCrawlerData);
@@ -22,8 +22,10 @@ public class WebCrawler {
         webCrawlerData.setLocation(getServerLocationFromIPAddress(webCrawlerData.getUrlIPAddress()));
         return webCrawlerData;
     }
+
     private static void setPageLinksInfo(String URL, WebCrawlerDataBase webCrawlerData) {
         ArrayList<String> links = new ArrayList<>();
+
         try {
             Document document = Jsoup.connect(URL).get();
             Elements linksOnPage = document.select("a[href]");
@@ -40,6 +42,7 @@ public class WebCrawler {
             webCrawlerData.setLinksList(links);
         } catch (IOException e) {System.err.println("For '" + URL + "': " + e.getMessage());}
     }
+
     private static String getLanguageFromHTML(String url) {
         try {
             Document document = Jsoup.connect(url).get();
@@ -63,8 +66,8 @@ public class WebCrawler {
         final String APIKey="2ce1e6fb6b484fd4a39a431ecd66ae9f";
         String info;
         try {
-           String requestUrl = "https://api.ipgeolocation.io/ipgeo?apiKey=" + APIKey + "&ip=" + ip;
-           info=extractGeoLocationBasicInformation(getResponseFromURL(requestUrl));
+            String requestUrl = "https://api.ipgeolocation.io/ipgeo?apiKey=" + APIKey + "&ip=" + ip;
+            info=extractGeoLocationBasicInformation(getResponseFromURL(requestUrl));
         } catch (Exception e) {e.printStackTrace();return null;}
         return info;
     }
