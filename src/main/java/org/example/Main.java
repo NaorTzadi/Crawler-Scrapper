@@ -1,6 +1,8 @@
 package org.example;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -12,7 +14,13 @@ public class Main {
     //https://www.adobe.com/express/feature/image/resize
     //https://onlinestringtools.com/
     public static void main(String[] args) {
+        // צריך להוסיף מתודה שבודקת חיבור לאינטרנט לאורך הדרך
+        if (!isConnected()){
+            System.out.println("before we proceed, please check your internet connection.");
+            shouldCheckConnection();
+        }
         mainMenu();
+
     }
     private static void mainMenu(){
         final String option1="1"; final String option2="2";final String option3="3";
@@ -34,8 +42,6 @@ public class Main {
             webScrapperOptionsMenu();
         }else if (decision.equals(option3)){
             //נכניס כאן פונקציה
-        }else {
-
         }
 
     }
@@ -286,5 +292,40 @@ public class Main {
         getWebCrawlerHistoryMenu();
     }
 
+    private static boolean isConnected(){
+        try {
+            InetAddress address = InetAddress.getByName("8.8.8.8");
+            boolean isReachable = address.isReachable(5000);
+            if (isReachable) {
+                System.out.println("Internet connection is available.");
+                return true;
+            } else {
+                System.out.println("No internet connection.");
+                return false;
+            }
+        } catch (UnknownHostException e) {
+            System.out.println("Unknown host: " + e.getMessage());
+            return false;
+        } catch (Exception e) {
+            System.out.println("An error occurred: " + e.getMessage());
+            return false;
+        }
+    }
+    private static void shouldCheckConnection(){
+        Scanner scanner=new Scanner(System.in);
+        int hasFailedOnce=0;
+        final String option1="1";
+        String decision;
+        do {
+            if (hasFailedOnce>0){System.out.println("invalid input!!");}
+            System.out.println("press "+option1+" if you wish to check again.");
+            decision=scanner.nextLine();
+            hasFailedOnce++;
+        }while (!decision.equals(option1));
+        if (!isConnected()){
+            System.out.println("still not connected...");
+            shouldCheckConnection();
+        }
+    }
     private static boolean isValidUrl(String url){try {new URL(url);return true;} catch (MalformedURLException e) {return false;}}
 }
