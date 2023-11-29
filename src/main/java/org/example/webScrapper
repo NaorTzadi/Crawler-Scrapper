@@ -1,10 +1,14 @@
 package org.example;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;  // This should be from Jsoup
+import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
 
 public class WebScrapper {
@@ -13,9 +17,24 @@ public class WebScrapper {
         WebScrapperDataBase webScrapperDataBase=new WebScrapperDataBase(url,null);
         HashMap<String,Integer> keyWordAppearanceCount=new HashMap<>();
 
-
-
         return webScrapperDataBase;
+    }
+
+    private static List<String> getImageLinksFromUrl(String url) {
+        List<String> imageLinks = new ArrayList<>();
+        try {
+            Document doc = Jsoup.connect(url).get(); // Connect to the URL and parse its HTML
+
+            Elements imageElements = doc.select("img[src]"); // Select all image elements with src attribute
+
+            for (Element img : imageElements) {
+                String imgSrc = img.attr("abs:src"); // Extract absolute URL of the image
+                if (!imgSrc.isEmpty()) {
+                    imageLinks.add(imgSrc);
+                }
+            }
+        } catch (Exception e) {System.err.println("Error fetching image links from " + url + ": " + e.getMessage());}
+        return imageLinks;
     }
 
     public static void searchByKeyWord() {
