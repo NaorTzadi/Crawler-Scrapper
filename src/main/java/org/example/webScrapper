@@ -1,10 +1,11 @@
 package org.example;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;  // This should be from Jsoup
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import java.io.BufferedInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,11 +20,71 @@ public class WebScrapper {
 
         return webScrapperDataBase;
     }
+    public static ArrayList<String> getVideoUrls() {
+        String url=promptUrl();
+        if (url.equals("0")){return null;}else if (url.equals("-1")){getVideoUrls();return null;}
+        ArrayList<String> videoUrls=new ArrayList<>();
+        try {
+            Document doc = Jsoup.connect(url)
+                    .userAgent(Utility.getUserAgent())
+                    .get();
 
-    private static List<String> getImageLinksFromUrl(String url) {
+            //System.out.println(doc);
+
+            Elements videoElements = doc.select("video");
+
+            boolean videosFound = false;
+
+            //System.out.println(videoElements.size());
+
+            for (Element video : videoElements) {
+
+                //System.out.println(video);
+
+                String videoSrc = video.attr("src");
+                if (!videoSrc.isEmpty()) {
+                    System.out.println("Found video URL: " + videoSrc);
+                    videoUrls.add(videoSrc);
+                    videosFound = true;
+                }
+                // Check for video sources inside <source> tags
+                Elements sourceElements = video.select("source");
+                for (Element source : sourceElements) {
+                    System.out.println("Found video source URL: " + source.attr("src"));
+                    videosFound = true;
+                }
+            }
+
+            if (!videosFound) {System.out.println("No videos found on the webpage.");}
+
+        } catch (IOException e) {
+            System.err.println("Error fetching page: " + e.getMessage());
+        }
+        return videoUrls;
+    }
+
+    public static void downloadVideo(String videoUrl, String savePath) {
+        try (BufferedInputStream in = new BufferedInputStream(new URL(videoUrl).openStream());
+             FileOutputStream fileOutputStream = new FileOutputStream(savePath)) {
+            byte dataBuffer[] = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
+                fileOutputStream.write(dataBuffer, 0, bytesRead);
+            }
+            System.out.println("Download completed: " + savePath);
+        } catch (IOException e) {
+            System.out.println("Error downloading the video: " + e.getMessage());
+        }
+    }
+
+    public static List<String> getImageLinksFromUrl() {
+        String url=promptUrl();
+        if (url.equals("0")){return null;}else if (url.equals("-1")){getImageLinksFromUrl();return null;}
         List<String> imageLinks = new ArrayList<>();
         try {
-            Document doc = Jsoup.connect(url).get(); // Connect to the URL and parse its HTML
+            Document doc = Jsoup.connect(url)
+                    .userAgent( Utility.getUserAgent())
+                    .get();
 
             Elements imageElements = doc.select("img[src]"); // Select all image elements with src attribute
 
@@ -31,6 +92,7 @@ public class WebScrapper {
                 String imgSrc = img.attr("abs:src"); // Extract absolute URL of the image
                 if (!imgSrc.isEmpty()) {
                     imageLinks.add(imgSrc);
+                    System.out.print(" "+imgSrc+",");
                 }
             }
         } catch (Exception e) {System.err.println("Error fetching image links from " + url + ": " + e.getMessage());}
@@ -39,17 +101,16 @@ public class WebScrapper {
 
     public static void searchByKeyWord() {
         Scanner scanner=new Scanner(System.in);
-        System.out.println("you can press 0 at anytime to go back.");
-        System.out.println("choose a url:");
-        String url=scanner.nextLine();
-        if(url.equals("0")){return;}
-        if(!isValidURL(url)){System.out.println("invalid url!");System.out.println();searchByKeyWord();}
+        String url=promptUrl();
+        if (url.equals("0")){return;}else if (url.equals("-1")){searchByKeyWord();return;}
         System.out.println("choose a key word to search for:");
         String decision=scanner.nextLine();
         if(decision.equals("0")){return;}
         try {
-            Document document = Jsoup.connect(url).get();
-            String text = document.text();
+            Document doc = Jsoup.connect(url)
+                    .userAgent(Utility.getUserAgent())
+                    .get();
+            String text = doc.text();
             if(!text.contains(decision)){
                 System.out.println("The keyword '" + decision + "' was found " + countOccurrences(text, decision) + " times.");
             }
@@ -58,7 +119,7 @@ public class WebScrapper {
         }
     }
     private static int countOccurrences(String text, String keyWord) {
-        String[] words = text.split("\\s+"); // Split text into words
+        String[] words = text.split("\\s+");
         int count = 0;
         for (String word : words) {
             if (word.equalsIgnoreCase(keyWord)) {
@@ -67,5 +128,20 @@ public class WebScrapper {
         }
         return count;
     }
-    public static boolean isValidURL(String input) {try {new URL(input);return true;} catch (MalformedURLException e) {return false;}}
+
+    private static String promptUrl() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("you can press 0 at anytime to go back.");
+        System.out.println("choose a url:");
+        String url = scanner.nextLine();
+        if (url.equals("0")) {
+            return "0";
+        }
+        if (!Utility.isValidUrl(url)) {
+            System.out.println("invalid url!");
+            System.out.println();
+            return "-1";
+        }
+        return url;
+    }
 }
