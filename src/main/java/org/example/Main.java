@@ -1,8 +1,4 @@
 package org.example;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -12,15 +8,13 @@ public class Main {
     // urls to test:
     //https://books.toscrape.com/
     //https://www.adobe.com/express/feature/image/resize
-    //https://onlinestringtools.com/
+    //https://store.steampowered.com/app/1172470/Apex_Legends/
     public static void main(String[] args) {
-        // צריך להוסיף מתודה שבודקת חיבור לאינטרנט לאורך הדרך
-        if (!isConnected()){
-            System.out.println("before we proceed, please check your internet connection.");
-            shouldCheckConnection();
-        }
-        mainMenu();
+        Utility.isConnected();
 
+        //WebScrapper.getVideoUrls();
+        //System.out.println(Utility.robotTextChecker("https://store.steampowered.com/app/1172470/Apex_Legends/"));
+        mainMenu();
     }
     private static void mainMenu(){
         final String option1="1"; final String option2="2";final String option3="3";
@@ -82,7 +76,7 @@ public class Main {
     }
     private static void webScrapperOptionsMenu(){
         final String option1="1"; final String option2="2";final String option3="3";final String option4="4";
-        final String option5="5"; String goBackOption="0";
+        final String option5="5";final String option6="6";final String option7="7"; String goBackOption="0";
         Scanner scanner=new Scanner(System.in);
         String decision;
         int counter=0;
@@ -91,25 +85,31 @@ public class Main {
             System.out.println("press "+goBackOption+" to go back to the main menu.");
             System.out.println("press "+option1+" to scrap a given url.");
             System.out.println("press "+option2+" to search for a key word.");
-            System.out.println("press "+option3+" to check web scrapper data base history");
-            System.out.println("press "+option4+" to erase a data base section.");
-            System.out.println("press "+option5+" to erase all data base history.");
+            System.out.println("press "+option3+" to retrieve image links.");
+            System.out.println("press "+option4+" to retrieve video links.");
+            System.out.println("press "+option5+" to check web scrapper data base history");
+            System.out.println("press "+option6+" to erase a data base section.");
+            System.out.println("press "+option7+" to erase all data base history.");
             decision=scanner.nextLine();
             if(decision.equals(goBackOption)){mainMenu();}
             counter++;
-        }while (!decision.equals(option1) && !decision.equals(option2) && !decision.equals(option3)&&!decision.equals(option4)&&!decision.equals(option5));
+        }while (!decision.equals(option1) && !decision.equals(option2) && !decision.equals(option3)&&!decision.equals(option4)&&!decision.equals(option5)&&!decision.equals(option6)&&!decision.equals(option7));
         if(decision.equals(option1)){
             insertUrlToScrap();
         }else if (decision.equals(option2)){
             WebScrapper.searchByKeyWord();
         }else if (decision.equals(option3)){
-            getWebScrapperHistoryMenu();
+            WebScrapper.getImageLinksFromUrl();
         }else if (decision.equals(option4)){
-            eraseWebScrapperData();
+            WebScrapper.getVideoUrls();
         }else if (decision.equals(option5)){
+            getWebScrapperHistoryMenu();
+        }else if (decision.equals(option6)){
+            eraseWebScrapperData();
+        }else if (decision.equals(option7)){
             eraseWebScrapperDataBase();
         }
-        System.out.println(); webScrapperOptionsMenu();
+        System.out.println();webScrapperOptionsMenu();
     }
 
     private static void eraseWebScrapperData(){
@@ -189,7 +189,7 @@ public class Main {
         Scanner scanner=new Scanner(System.in);
         System.out.println("insert a url to start:");
         String url=scanner.nextLine();
-        if(!isValidUrl(url)){System.out.println("the url you entered is not valid!");
+        if(!Utility.isValidUrl(url)){System.out.println("the url you entered is not valid!");
             webScrapperOptionsMenu();}
         for(WebScrapperDataBase data:webScrapperDataBase){
             if(url.equals(data.getUrl())){
@@ -206,7 +206,7 @@ public class Main {
         Scanner scanner=new Scanner(System.in);
         System.out.println("insert a url to start:");
         String url=scanner.nextLine();
-        if(!isValidUrl(url)){System.out.println("the url you entered is not valid!");
+        if(!Utility.isValidUrl(url)){System.out.println("the url you entered is not valid!");
             webCrawlerOptionsMenu();}
         for(WebCrawlerDataBase data:webCrawlerDataBase){
             if(url.equals(data.getUrl())){
@@ -292,40 +292,6 @@ public class Main {
         getWebCrawlerHistoryMenu();
     }
 
-    private static boolean isConnected(){
-        try {
-            InetAddress address = InetAddress.getByName("8.8.8.8");
-            boolean isReachable = address.isReachable(5000);
-            if (isReachable) {
-                System.out.println("Internet connection is available.");
-                return true;
-            } else {
-                System.out.println("No internet connection.");
-                return false;
-            }
-        } catch (UnknownHostException e) {
-            System.out.println("Unknown host: " + e.getMessage());
-            return false;
-        } catch (Exception e) {
-            System.out.println("An error occurred: " + e.getMessage());
-            return false;
-        }
-    }
-    private static void shouldCheckConnection(){
-        Scanner scanner=new Scanner(System.in);
-        int hasFailedOnce=0;
-        final String option1="1";
-        String decision;
-        do {
-            if (hasFailedOnce>0){System.out.println("invalid input!!");}
-            System.out.println("press "+option1+" if you wish to check again.");
-            decision=scanner.nextLine();
-            hasFailedOnce++;
-        }while (!decision.equals(option1));
-        if (!isConnected()){
-            System.out.println("still not connected...");
-            shouldCheckConnection();
-        }
-    }
-    private static boolean isValidUrl(String url){try {new URL(url);return true;} catch (MalformedURLException e) {return false;}}
+
+
 }
