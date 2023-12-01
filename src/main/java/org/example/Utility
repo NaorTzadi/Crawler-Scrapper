@@ -1,0 +1,120 @@
+package org.example;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.*;
+import java.util.Random;
+import java.util.Scanner;
+public class Utility {
+    public static boolean isValidUrl(String url){try {new URL(url);return true;} catch (MalformedURLException e) {return false;}}
+
+    public static void isConnected(){
+        try {
+            InetAddress address = InetAddress.getByName("8.8.8.8");
+            boolean isReachable = address.isReachable(5000);
+            if (isReachable) {
+                System.out.println("Internet connection is available.");
+
+            } else {
+                System.out.println("No internet connection.");
+                shouldCheckConnection();
+            }
+        } catch (UnknownHostException e) {
+            System.out.println("Unknown host: " + e.getMessage());
+            shouldCheckConnection();
+        } catch (Exception e) {
+            System.out.println("An error occurred: " + e.getMessage());
+            shouldCheckConnection();
+        }
+    }
+    private static void shouldCheckConnection(){
+        Scanner scanner=new Scanner(System.in);
+        System.out.println("before we proceed, please check your internet connection.");
+        int hasFailedOnce=0;
+        final String option1="1";
+        String decision;
+        do {
+            if (hasFailedOnce>0){System.out.println("invalid input!!");}
+            System.out.println("press "+option1+" if you wish to check again.");
+            decision=scanner.nextLine();
+            hasFailedOnce++;
+        }while (!decision.equals(option1));
+        isConnected();
+    }
+ public static boolean isAccessAllowed(String fullUrl) {
+     try {
+         String userAgent = getUserAgent();
+         URL url = new URL(fullUrl);
+         String baseUrl = url.getProtocol() + "://" + url.getHost(); // Only need base URL for robots.txt
+
+         URL robotsTxtUrl = new URL(baseUrl + "/robots.txt");
+         HttpURLConnection connection = (HttpURLConnection) robotsTxtUrl.openConnection();
+         connection.setRequestProperty("User-Agent", userAgent);
+
+         try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+             String line;
+             boolean isUserAgentRelevant = false;
+             boolean isAllowed = true; // Default to true
+
+             while ((line = in.readLine()) != null) {
+                 line = line.trim();
+                 if (line.toLowerCase().startsWith("user-agent")) {
+                     isUserAgentRelevant = line.substring(11).trim().equals("*") ||
+                             line.substring(11).trim().equalsIgnoreCase(userAgent);
+                 } else if (isUserAgentRelevant && line.toLowerCase().startsWith("disallow")) {
+                     String disallowedPath = line.substring(9).trim();
+                     if (!disallowedPath.isEmpty() && url.getPath().startsWith(disallowedPath)) {
+                         isAllowed = false;
+                         break; // Once disallowed, no need to check further
+                     }
+                 }
+             }
+             return isAllowed;
+         }
+     } catch (FileNotFoundException e) {// The robots.txt file does not exist
+         e.printStackTrace();
+         return true;
+     } catch (IOException e) {// Some other IO issue occurred (e.g., network problem)
+         e.printStackTrace();
+         return false;
+     } catch (Exception e) {// Catch any other unexpected exceptions
+         e.printStackTrace();
+         return false;
+     }
+ }
+    public static String getUserAgent(){
+        String[] userAgents = new String[10];
+        userAgents[0] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36";
+        userAgents[1] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15; rv:86.0) Gecko/20100101 Firefox/86.0";
+        userAgents[2] = "Mozilla/5.0 (iPhone; CPU iPhone OS 14_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Mobile/15E148 Safari/604.1";
+        userAgents[3] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36 Edg/88.0.705.74";
+        userAgents[4] = "Mozilla/5.0 (Linux; Android 10; SM-A505FN) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Mobile Safari/537.36";
+        userAgents[5] = "Mozilla/5.0 (iPad; CPU OS 13_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148";
+        userAgents[6] = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:86.0) Gecko/20100101 Firefox/86.0";
+        userAgents[7] = "Mozilla/5.0 (Windows NT 10.0; Trident/7.0; rv:11.0) like Gecko";
+        userAgents[8] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 Safari/537.36";
+        userAgents[9] = "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko";
+        return userAgents[new Random().nextInt(userAgents.length)];
+    }
+
+    public static void test(String url){
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpGet request = new HttpGet(url);
+            request.setHeader("User-Agent", getUserAgent());
+            request.setHeader("Accept-Language", "en-US,en;q=0.5");
+            request.setHeader("Connection", "keep-alive");
+
+            try (CloseableHttpResponse response = httpClient.execute(request)) {
+                // Handle the response
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+}
