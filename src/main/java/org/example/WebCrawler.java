@@ -69,7 +69,9 @@ public class WebCrawler {
     private static List<String> getLinksFromUrl(String url) {
         List<String> links = new ArrayList<>();
         try {
-            Document doc = Jsoup.connect(url).get(); // Connect to the URL and parse its HTML
+            Document doc = Jsoup.connect(url)
+                    .userAgent(Utility.getUserAgent())
+                    .get();
 
             Elements linkElements = doc.select("a[href]"); // Select all hyperlinks
 
@@ -87,8 +89,10 @@ public class WebCrawler {
 
     private static String getLanguageFromHTML(String url) {
         try {
-            Document document = Jsoup.connect(url).get();
-            Element htmlTag = document.select("html").first();
+            Document doc = Jsoup.connect(url)
+                    .userAgent(Utility.getUserAgent())
+                    .get();
+            Element htmlTag = doc.select("html").first();
             return htmlTag.attr("lang"); // Returns the value of the lang attribute
         } catch (Exception e) {
             e.printStackTrace();
