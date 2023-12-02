@@ -11,7 +11,6 @@ public class Main {
     //https://store.steampowered.com/app/1172470/Apex_Legends/
     public static void main(String[] args) {
         Utility.isConnected();
-
         //WebScrapper.getVideoUrls();
         //System.out.println(Utility.robotTextChecker("https://store.steampowered.com/app/1172470/Apex_Legends/"));
         mainMenu();
