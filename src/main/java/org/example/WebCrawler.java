@@ -3,95 +3,25 @@ import org.json.JSONObject;
 import org.jsoup.nodes.Element;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.InetAddress;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Scanner;
+import java.net.*;
+import java.util.*;
 
 public class WebCrawler {
-    private static HashSet<String> visitedLinks= new HashSet<>();
-    private static int iterationsCount=0;
-    private static boolean shouldStop=false;
     public static WebCrawlerDataBase getAnalyzedInfo(String url){
-        visitedLinks.clear();iterationsCount=0; shouldStop=false;
+        Utility.isConnected();Utility.isAccessAllowed(url);
         WebCrawlerDataBase webCrawlerData=new WebCrawlerDataBase(url,-1,-1, new ArrayList<>(),null,null,null);
-
-        startCrawling(url);
-        webCrawlerData.setLinksList(new ArrayList<>(visitedLinks));
-        webCrawlerData.setUniqueLinksCount(new ArrayList<>(visitedLinks).size());
-        webCrawlerData.setIterationsCount(iterationsCount);
-
+        webCrawlerData=new Crawl().startCrawling(url,webCrawlerData);
         webCrawlerData.setLanguage(getLanguageFromHTML(url));
         webCrawlerData.setUrlIPAddress(getIPAddressFromUrl(url));
         webCrawlerData.setLocation(getServerLocationFromIPAddress(webCrawlerData.getUrlIPAddress()));
         return webCrawlerData;
     }
-    private static void startCrawling(String startUrl) {
-        crawl(startUrl);
-    }
-    private static void crawl(String url) {
-        if(shouldStop){return;}
-        iterationsCount++;
-        if (visitedLinks.contains(url)) {return;}
-        visitedLinks.add(url); // Mark this URL as visited
-        if (visitedLinks.size() % 1500 == 0) {shouldProceed();}
-
-        System.out.print("\rNumber of links counted so far: " + visitedLinks.size());
-        List<String> links = getLinksFromUrl(url); // Fetch links from the URL
-        for (String link : links) {
-            crawl(link); // Recursive call for each link
-        }
-    }
-    private static void shouldProceed(){
-        Scanner scanner=new Scanner(System.in);
-        int hasFailedOnce=0;
-        final String option1="1"; final String option2="0";
-        String decision;
-        do {
-            if (hasFailedOnce>0){System.out.println("invalid input!!");}
-            System.out.println();
-            System.out.println("so far we counted: "+visitedLinks.size()+" links.");
-            System.out.println("press "+option1+" if you wish to proceed.");
-            System.out.println("press "+option2+" if you want to finish.");
-            decision=scanner.nextLine();
-            hasFailedOnce++;
-        }while (!decision.equals(option1)&&!decision.equals(option2));
-        shouldStop=decision.equals("0");
-        iterationsCount--;
-    }
-    private static List<String> getLinksFromUrl(String url) {
-        List<String> links = new ArrayList<>();
-        try {
-            Document doc = Jsoup.connect(url)
-                    .userAgent(Utility.getUserAgent())
-                    .get();
-
-            Elements linkElements = doc.select("a[href]"); // Select all hyperlinks
-
-            for (Element linkElement : linkElements) {
-                String link = linkElement.attr("abs:href"); // Extract absolute URL
-                if (!link.isEmpty()) {
-                    links.add(link);
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Error fetching links from " + url + ": " + e.getMessage());
-        }
-        return links;
-    }
-
     private static String getLanguageFromHTML(String url) {
         try {
-            Document doc = Jsoup.connect(url)
-                    .userAgent(Utility.getUserAgent())
-                    .get();
+            Document doc = Jsoup.connect(url).userAgent(Utility.getUserAgent()).execute().parse();// Make the request and accept cookies, without storing them for future use
             Element htmlTag = doc.select("html").first();
             return htmlTag.attr("lang"); // Returns the value of the lang attribute
         } catch (Exception e) {
@@ -136,7 +66,7 @@ public class WebCrawler {
         JSONObject jsonObject = new JSONObject(info);
         String continent = jsonObject.getString("continent_name");
         String country = jsonObject.getString("country_name");
-        String district = jsonObject.optString("district", "N/A"); // Using optString for optional fields
+        String district = jsonObject.optString("district", "N/A");
         String city = jsonObject.getString("city");
         String zipCode = jsonObject.getString("zipcode");
         String latitude = jsonObject.getString("latitude");
@@ -146,6 +76,7 @@ public class WebCrawler {
                 ", Zip Code: " + zipCode + ", Latitude: " + latitude +
                 ", Longitude: " + longitude;
     }
+
 
 
 }
