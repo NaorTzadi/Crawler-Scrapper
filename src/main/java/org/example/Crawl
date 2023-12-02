@@ -1,0 +1,73 @@
+package org.example;
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import java.util.*;
+public class Crawl {
+    private static HashSet<String> visitedLinks= new HashSet<>();
+    private static boolean shouldStop=false;
+    private static int iterationsCount=0;
+    private static Map<String, String> cookies = new HashMap<>();
+    private static final String userAgent=Utility.getUserAgent();
+
+    public WebCrawlerDataBase startCrawling(String url, WebCrawlerDataBase webCrawlerData){
+        // מה קןרה במצב בו אתר מסויים דורש שימוש רצוף בעוגיות במהלך השימוש
+        // יתכנו תוספות נוספות למחלקה
+        crawl(url);
+        webCrawlerData.setLinksList(new ArrayList<>(visitedLinks));
+        webCrawlerData.setUniqueLinksCount(new ArrayList<>(visitedLinks).size());
+        webCrawlerData.setIterationsCount(iterationsCount);
+        return webCrawlerData;
+    }
+
+    private static void crawl(String url) {
+        if(shouldStop){return;}
+        iterationsCount++;
+        if (visitedLinks.contains(url)) {return;}
+        visitedLinks.add(url); // Mark this URL as visited
+        if (visitedLinks.size() % 1500 == 0) {shouldProceed();}
+
+        System.out.print("\rNumber of links counted so far: " + visitedLinks.size());
+        List<String> links = getLinksFromUrl(url); // Fetch links from the URL
+        for (String link : links) {
+            crawl(link); // Recursive call for each link
+        }
+    }
+    private static List<String> getLinksFromUrl(String url) {
+        List<String> links = new ArrayList<>();
+        try {
+            Connection.Response response = Jsoup.connect(url).userAgent(userAgent).cookies(cookies).execute();
+            cookies.putAll(response.cookies());  // Update the stored cookies
+            Document doc = response.parse();
+            Elements linkElements = doc.select("a[href]");  // Select all hyperlinks
+            for (Element linkElement : linkElements) {
+                String link = linkElement.attr("abs:href");  // Extract absolute URL
+                if (!link.isEmpty()) {
+                    links.add(link);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error fetching links from " + url + ": " + e.getMessage());
+        }
+        return links;
+    }
+    private static void shouldProceed(){
+        Scanner scanner=new Scanner(System.in);
+        int hasFailedOnce=0;
+        final String option1="1"; final String option2="0";
+        String decision;
+        do {
+            if (hasFailedOnce>0){System.out.println("invalid input!!");}
+            System.out.println();
+            System.out.println("so far we counted: "+visitedLinks.size()+" links.");
+            System.out.println("press "+option1+" if you wish to proceed.");
+            System.out.println("press "+option2+" if you want to finish.");
+            decision=scanner.nextLine();
+            hasFailedOnce++;
+        }while (!decision.equals(option1)&&!decision.equals(option2));
+        shouldStop=decision.equals("0");
+        iterationsCount--;
+    }
+}
