@@ -46,47 +46,49 @@ public class Utility {
         }while (!decision.equals(option1));
         isConnected();
     }
- public static boolean isAccessAllowed(String fullUrl) {
-     try {
-         String userAgent = getUserAgent();
-         URL url = new URL(fullUrl);
-         String baseUrl = url.getProtocol() + "://" + url.getHost(); // Only need base URL for robots.txt
+    public static boolean isAccessAllowed(String fullUrl) {
+        try {
+            String userAgent = getUserAgent();
+            URL url = new URL(fullUrl);
+            String baseUrl = url.getProtocol() + "://" + url.getHost(); // Only need base URL for robots.txt
 
-         URL robotsTxtUrl = new URL(baseUrl + "/robots.txt");
-         HttpURLConnection connection = (HttpURLConnection) robotsTxtUrl.openConnection();
-         connection.setRequestProperty("User-Agent", userAgent);
+            URL robotsTxtUrl = new URL(baseUrl + "/robots.txt");
+            HttpURLConnection connection = (HttpURLConnection) robotsTxtUrl.openConnection();
+            connection.setRequestProperty("User-Agent", userAgent);
 
-         try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
-             String line;
-             boolean isUserAgentRelevant = false;
-             boolean isAllowed = true; // Default to true
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                String line;
+                boolean isUserAgentRelevant = false;
+                System.out.println("access allowed.");
+                boolean isAllowed = true; // Default to true
 
-             while ((line = in.readLine()) != null) {
-                 line = line.trim();
-                 if (line.toLowerCase().startsWith("user-agent")) {
-                     isUserAgentRelevant = line.substring(11).trim().equals("*") ||
-                             line.substring(11).trim().equalsIgnoreCase(userAgent);
-                 } else if (isUserAgentRelevant && line.toLowerCase().startsWith("disallow")) {
-                     String disallowedPath = line.substring(9).trim();
-                     if (!disallowedPath.isEmpty() && url.getPath().startsWith(disallowedPath)) {
-                         isAllowed = false;
-                         break; // Once disallowed, no need to check further
-                     }
-                 }
-             }
-             return isAllowed;
-         }
-     } catch (FileNotFoundException e) {// The robots.txt file does not exist
-         e.printStackTrace();
-         return true;
-     } catch (IOException e) {// Some other IO issue occurred (e.g., network problem)
-         e.printStackTrace();
-         return false;
-     } catch (Exception e) {// Catch any other unexpected exceptions
-         e.printStackTrace();
-         return false;
-     }
- }
+                while ((line = in.readLine()) != null) {
+                    line = line.trim();
+                    if (line.toLowerCase().startsWith("user-agent")) {
+                        isUserAgentRelevant = line.substring(11).trim().equals("*") ||
+                                line.substring(11).trim().equalsIgnoreCase(userAgent);
+                    } else if (isUserAgentRelevant && line.toLowerCase().startsWith("disallow")) {
+                        String disallowedPath = line.substring(9).trim();
+                        if (!disallowedPath.isEmpty() && url.getPath().startsWith(disallowedPath)) {
+                            System.out.println("access not allowed.");
+                            isAllowed = false;
+                            break; // Once disallowed, no need to check further
+                        }
+                    }
+                }
+                return isAllowed;
+            }
+        } catch (FileNotFoundException e) {// The robots.txt file does not exist
+            System.out.println("The robots.txt file does not exist.");
+            return true;
+        } catch (IOException e) {// Some other IO issue occurred (e.g., network problem)
+            e.printStackTrace();
+            return false;
+        } catch (Exception e) {// Catch any other unexpected exceptions
+            e.printStackTrace();
+            return false;
+        }
+    }
     public static String getUserAgent(){
         String[] userAgents = new String[10];
         userAgents[0] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36";
@@ -102,7 +104,10 @@ public class Utility {
         return userAgents[new Random().nextInt(userAgents.length)];
     }
 
-    public static void test(String url){
+    public static int getRandomDelay() {return 1000 + new Random().nextInt(9000);} //כאשר יש כמה בקשות שמתרחשות בפונקציה
+
+
+/*    public static void test(String url){
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpGet request = new HttpGet(url);
             request.setHeader("User-Agent", getUserAgent());
@@ -115,6 +120,6 @@ public class Utility {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
+    }*/
 
 }
