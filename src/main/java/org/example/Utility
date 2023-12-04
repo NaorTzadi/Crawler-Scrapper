@@ -1,8 +1,4 @@
 package org.example;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -12,25 +8,13 @@ import java.util.Random;
 import java.util.Scanner;
 public class Utility {
     public static boolean isValidUrl(String url){try {new URL(url);return true;} catch (MalformedURLException e) {return false;}}
-
     public static void isConnected(){
-        try {
-            InetAddress address = InetAddress.getByName("8.8.8.8");
+        try {InetAddress address = InetAddress.getByName("8.8.8.8");
             boolean isReachable = address.isReachable(5000);
-            if (isReachable) {
-                System.out.println("Internet connection is available.");
-
-            } else {
-                System.out.println("No internet connection.");
-                shouldCheckConnection();
-            }
-        } catch (UnknownHostException e) {
-            System.out.println("Unknown host: " + e.getMessage());
-            shouldCheckConnection();
-        } catch (Exception e) {
-            System.out.println("An error occurred: " + e.getMessage());
-            shouldCheckConnection();
-        }
+            if (isReachable) {System.out.println("Internet connection is available.");
+            } else {System.out.println("No internet connection.");shouldCheckConnection();}
+        } catch (UnknownHostException e) {System.out.println("Unknown host: " + e.getMessage());shouldCheckConnection();
+        } catch (Exception e) {System.out.println("An error occurred: " + e.getMessage());shouldCheckConnection();}
     }
     private static void shouldCheckConnection(){
         Scanner scanner=new Scanner(System.in);
@@ -48,13 +32,16 @@ public class Utility {
     }
     public static boolean isAccessAllowed(String fullUrl) {
         try {
-            String userAgent = getUserAgent();
+            String userAgent = getRandomUserAgent();
             URL url = new URL(fullUrl);
-            String baseUrl = url.getProtocol() + "://" + url.getHost(); // Only need base URL for robots.txt
+            String baseUrl = url.getProtocol() + "://" + url.getHost();
 
             URL robotsTxtUrl = new URL(baseUrl + "/robots.txt");
             HttpURLConnection connection = (HttpURLConnection) robotsTxtUrl.openConnection();
             connection.setRequestProperty("User-Agent", userAgent);
+            connection.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+            connection.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
+            connection.setRequestProperty("Accept-Encoding", "gzip, deflate, br");
 
             try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
                 String line;
@@ -89,7 +76,7 @@ public class Utility {
             return false;
         }
     }
-    public static String getUserAgent(){
+    public static String getRandomUserAgent(){
         String[] userAgents = new String[10];
         userAgents[0] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36";
         userAgents[1] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15; rv:86.0) Gecko/20100101 Firefox/86.0";
@@ -103,23 +90,50 @@ public class Utility {
         userAgents[9] = "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko";
         return userAgents[new Random().nextInt(userAgents.length)];
     }
+    public static String getPersonalUserAgent() throws Exception {
+        URL url = new URL("https://httpbin.org/user-agent");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        int responseCode = connection.getResponseCode();
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String inputLine;
+            StringBuilder response = new StringBuilder();
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+            return response.toString();
+        } else {
+            throw new Exception("Unable to retrieve user agent");
+        }
+    }
+    public static String promptUrl() { // WebScrapperUtility
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("you can press 0 at anytime to go back.");
+        System.out.println("choose a url:");
+        String url = scanner.nextLine();
+        if (url.equals("0")) {return "0";}
+        if (!Utility.isValidUrl(url)) {
+            System.out.println("invalid url!");
+            System.out.println();
+            return "-1";
+        }
+        return url;
+    }
+    public static int countOccurrences(String text, String keyWord) { // WebScrapperUtility
+        String[] words = text.split("\\s+");
+        int count = 0;
+        for (String word : words) {
+            if (word.equalsIgnoreCase(keyWord)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+
 
     public static int getRandomDelay() {return 1000 + new Random().nextInt(9000);} //כאשר יש כמה בקשות שמתרחשות בפונקציה
-
-
-/*    public static void test(String url){
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpGet request = new HttpGet(url);
-            request.setHeader("User-Agent", getUserAgent());
-            request.setHeader("Accept-Language", "en-US,en;q=0.5");
-            request.setHeader("Connection", "keep-alive");
-
-            try (CloseableHttpResponse response = httpClient.execute(request)) {
-                // Handle the response
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }*/
 
 }
