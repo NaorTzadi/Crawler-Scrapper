@@ -1,0 +1,72 @@
+package org.example;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import java.util.ArrayList;
+import java.util.List;
+public class SeleniumScrapper {
+
+    public static List<String> getVideoUrls(String url){
+        //String url =Utility.promptUrl();
+       ChromeDriver chromeDriver= getModifiedChromeDriver();
+        chromeDriver.get(url);
+
+        List<WebElement> videoElements = chromeDriver.findElements(By.tagName("video"));
+        List<String> videoUrls = new ArrayList<>();
+
+        // Extract URLs from video elements
+        for (WebElement videoElement : videoElements) {
+            String videoSrc = videoElement.getAttribute("src");
+            if (videoSrc != null && !videoSrc.isEmpty()) {
+                videoUrls.add(videoSrc);
+            }
+            // Check for <source> elements inside <video> tags
+            List<WebElement> sourceElements = videoElement.findElements(By.tagName("source"));
+            for (WebElement sourceElement : sourceElements) {
+                String sourceSrc = sourceElement.getAttribute("src");
+                if (sourceSrc != null && !sourceSrc.isEmpty()) {
+                    videoUrls.add(sourceSrc);
+                }
+            }
+        }
+        chromeDriver.quit();
+        return videoUrls;
+    }
+    public static List<String> getImagesUrls(String url) {
+        //String url =Utility.promptUrl();s
+        ChromeDriver chromeDriver = getModifiedChromeDriver();
+        chromeDriver.get(url);
+
+        List<WebElement> imageElements = chromeDriver.findElements(By.tagName("img"));
+        List<String> imageUrls = new ArrayList<>();
+
+        // Extract URLs from image elements
+        for (WebElement imageElement : imageElements) {
+            String imageSrc = imageElement.getAttribute("src");
+            if (imageSrc != null && !imageSrc.isEmpty()) {
+                imageUrls.add(imageSrc);
+            }
+        }
+        chromeDriver.quit();
+        return imageUrls;
+    }
+    public static int getKeyWordAmountOfOccurrences(String url, String keyword) {
+        ChromeDriver chromeDriver = getModifiedChromeDriver();
+        chromeDriver.get(url);
+        String pageText = chromeDriver.findElement(By.tagName("body")).getText();
+        chromeDriver.quit();
+        return Utility.countOccurrences(pageText.toLowerCase(),keyword.toLowerCase());
+    }
+
+    private static ChromeDriver getModifiedChromeDriver(){
+        System.setProperty("webdriver.openqa.driver", "path/to/chromedriver.exe");
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless"); // Enable headless mode
+        options.addArguments("--disable-gpu"); // Disable GPU (recommended for headless mode)
+        options.addArguments("--disable-notifications");
+        options.addArguments("--enable-automation");
+        options.addArguments("user-agent=" + Utility.getRandomUserAgent());
+        return new ChromeDriver(options);
+    }
+}
