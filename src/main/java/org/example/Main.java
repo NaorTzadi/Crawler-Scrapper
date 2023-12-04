@@ -7,14 +7,15 @@ public class Main {
     private final static ArrayList<WebScrapperDataBase> webScrapperDataBase=new ArrayList<>();
     // urls to test:
     //https://books.toscrape.com/
-    //https://www.adobe.com/express/feature/image/resize
+    //https://www.pexels.com/
     //https://store.steampowered.com/app/1172470/Apex_Legends/
     public static void main(String[] args) {
-        Utility.isConnected();
+        //Utility.isAccessAllowed("https://store.steampowered.com/app/1172470/Apex_Legends/");
         //WebScrapper.getVideoUrls();
-        //System.out.println(Utility.robotTextChecker("https://store.steampowered.com/app/1172470/Apex_Legends/"));
+        Utility.isConnected();
         mainMenu();
     }
+
     private static void mainMenu(){
         final String option1="1"; final String option2="2";final String option3="3";
         Scanner scanner=new Scanner(System.in);
@@ -96,9 +97,9 @@ public class Main {
         if(decision.equals(option1)){
             insertUrlToScrap();
         }else if (decision.equals(option2)){
-            WebScrapper.searchByKeyWord();
+            WebScrapper.getKeyWordAmountOfOccurrences();
         }else if (decision.equals(option3)){
-            WebScrapper.getImageLinksFromUrl();
+            WebScrapper.getImageUrls();
         }else if (decision.equals(option4)){
             WebScrapper.getVideoUrls();
         }else if (decision.equals(option5)){
@@ -165,22 +166,11 @@ public class Main {
         }
     }
     private static boolean doesExistsInScrapperDataBase(String url){
-        for (WebScrapperDataBase dataBase:webScrapperDataBase){
-            if(dataBase.getUrl().equals(url)){
-                return true;
-            }
-        }
-        return false;
+        return webScrapperDataBase.stream().anyMatch(dataBase -> dataBase.getUrl().equals(url));
     }
     private static boolean doesExistsInCrawlerDataBase(String url){
-        for(WebCrawlerDataBase dataBase:webCrawlerDataBase){
-            if(dataBase.getUrl().equals(url)){
-                return true;
-            }
-        }
-        return false;
+        return webCrawlerDataBase.stream().anyMatch(dataBase -> dataBase.getUrl().equals(url));
     }
-
     private static void eraseWebScrapperDataBase(){webScrapperDataBase.clear();}
     private static void eraseWebCrawlerDataBase(){webCrawlerDataBase.clear();}
 
