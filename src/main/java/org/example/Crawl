@@ -5,12 +5,13 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import java.util.*;
-public class Crawl {
+public class Crawl {// how can i make a certain class be accessed only by another specific class
+    // המחלקה הזאת משומשת רק על ידי webCrawler
     private static HashSet<String> visitedLinks= new HashSet<>();
     private static boolean shouldStop=false;
     private static int iterationsCount=0;
     private static Map<String, String> cookies = new HashMap<>();
-    private static final String userAgent=Utility.getUserAgent();
+    private static final String userAgent=Utility.getRandomUserAgent();
 
     public WebCrawlerDataBase startCrawling(String url, WebCrawlerDataBase webCrawlerData){
         // מה קןרה במצב בו אתר מסויים דורש שימוש רצוף בעוגיות במהלך השימוש
