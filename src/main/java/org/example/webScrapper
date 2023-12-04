@@ -5,7 +5,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.util.*;
-
 public class WebScrapper {
     public static WebScrapperDataBase getScrappedInfo(String url){
         WebScrapperDataBase webScrapperDataBase=new WebScrapperDataBase(url,null);
@@ -14,18 +13,16 @@ public class WebScrapper {
         Utility.isConnected();
         Utility.isAccessAllowed(url);
 
+
         return webScrapperDataBase;
     }
     public static ArrayList<String> getVideoUrls() {
-        String url = promptUrl();
+        String url = Utility.promptUrl();
         if (url.equals("0")) {return null;} else if (url.equals("-1")) {return getVideoUrls();}
         ArrayList<String> videoUrls = new ArrayList<>();
         try {
-            // Make the request and accept cookies, but don't store them for future use
-            Document doc = Jsoup.connect(url).userAgent(Utility.getUserAgent()).execute().parse();
-
+            Document doc = Jsoup.connect(url).userAgent(Utility.getRandomUserAgent()).execute().parse();
             Elements videoElements = doc.select("video");
-
             boolean videosFound = false;
             for (Element video : videoElements) {
                 String videoSrc = video.attr("src");
@@ -45,22 +42,15 @@ public class WebScrapper {
                 }
             }
             if (!videosFound) {System.out.println("No videos found on the webpage.");}
-
         } catch (IOException e) {System.err.println("Error fetching page: " + e.getMessage());}
         return videoUrls;
     }
-    public static List<String> getImageLinksFromUrl() {
-        String url = promptUrl();
-        if (url.equals("0")) {
-            return null;
-        } else if (url.equals("-1")) {
-            return getImageLinksFromUrl();
-        }
+    public static List<String> getImageUrls() {
+        String url = Utility.promptUrl();
+        if (url.equals("0")) {return null;} else if (url.equals("-1")) {return getImageUrls();}
         List<String> imageLinks = new ArrayList<>();
         try {
-            // Make the request and accept cookies, but don't store them for future use
-            Document doc = Jsoup.connect(url).userAgent(Utility.getUserAgent()).execute().parse();
-
+            Document doc = Jsoup.connect(url).userAgent(Utility.getRandomUserAgent()).execute().parse();
             Elements imageElements = doc.select("img[src]"); // Select all image elements with src attribute
             for (Element img : imageElements) {
                 String imgSrc = img.attr("abs:src"); // Extract absolute URL of the image
@@ -75,47 +65,26 @@ public class WebScrapper {
         return imageLinks;
     }
 
-    public static void searchByKeyWord() {
+    public static void getKeyWordAmountOfOccurrences() {
         Scanner scanner=new Scanner(System.in);
-        String url=promptUrl();
-        if (url.equals("0")){return;}else if (url.equals("-1")){searchByKeyWord();return;}
+        String url=Utility.promptUrl();
+        if (url.equals("0")){return;}else if (url.equals("-1")){
+            getKeyWordAmountOfOccurrences();return;}
         System.out.println("choose a key word to search for:");
-        String decision=scanner.nextLine();
-        if(decision.equals("0")){return;}
+        String keyWord=scanner.nextLine();
+        if(keyWord.equals("0")){return;}
         try {
-            Document doc = Jsoup.connect(url).userAgent(Utility.getUserAgent()).execute().parse();
-            String text = doc.text();
-            if(!text.contains(decision)){
-                System.out.println("The keyword '" + decision + "' was found " + countOccurrences(text, decision) + " times.");
+            Document doc = Jsoup.connect(url).userAgent(Utility.getRandomUserAgent()).execute().parse();
+            String fullText = doc.text();
+            String titleText = doc.title();
+            String textWithoutTitle = fullText.replace(titleText, "");
+            if (!textWithoutTitle.contains(keyWord)) {
+                System.out.println("The keyword '" + keyWord + "' was found " + Utility.countOccurrences(textWithoutTitle.toLowerCase(), keyWord.toLowerCase()) + " times.");
             }
         } catch (IOException e) {
             System.err.println("Error fetching URL: " + e.getMessage());
         }
     }
-    private static int countOccurrences(String text, String keyWord) {
-        String[] words = text.split("\\s+");
-        int count = 0;
-        for (String word : words) {
-            if (word.equalsIgnoreCase(keyWord)) {
-                count++;
-            }
-        }
-        return count;
-    }
 
-    private static String promptUrl() {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("you can press 0 at anytime to go back.");
-        System.out.println("choose a url:");
-        String url = scanner.nextLine();
-        if (url.equals("0")) {
-            return "0";
-        }
-        if (!Utility.isValidUrl(url)) {
-            System.out.println("invalid url!");
-            System.out.println();
-            return "-1";
-        }
-        return url;
-    }
+
 }
