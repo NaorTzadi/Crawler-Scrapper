@@ -21,7 +21,7 @@ public class WebCrawler {
     }
     private static String getLanguageFromHTML(String url) {
         try {
-            Document doc = Jsoup.connect(url).userAgent(Utility.getUserAgent()).execute().parse();// Make the request and accept cookies, without storing them for future use
+            Document doc = Jsoup.connect(url).userAgent(Utility.getRandomUserAgent()).execute().parse();// Make the request and accept cookies, without storing them for future use
             Element htmlTag = doc.select("html").first();
             return htmlTag.attr("lang"); // Returns the value of the lang attribute
         } catch (Exception e) {
