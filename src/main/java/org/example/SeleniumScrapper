@@ -1,19 +1,64 @@
 package org.example;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+
 import java.util.ArrayList;
 import java.util.List;
-public class SeleniumScrapper {
+import java.util.Scanner;
 
-    public static List<String> getVideoUrls(String url){
-        //String url =Utility.promptUrl();
+public class SeleniumScrapper extends WebScrapper {
+    public static WebScrapperDataBase getAllScrapedInfo(String url){
+        WebScrapperDataBase webScrapperData=new WebScrapperDataBase(url,getContentType(url),getImageUrls(url),getVideoUrls(url));
+
+        //נכניס כאן קוד
+
+        System.out.println(webScrapperData);
+        System.out.println();
+        return webScrapperData;
+    }
+    public static int getKeyWordAmountOfOccurrences(String url) {
+        Scanner scanner=new Scanner(System.in);
+        System.out.println("choose a key word to search for:");
+        String keyword=scanner.nextLine();
+        if(keyword.equals("0")){return -1;}
+        ChromeDriver chromeDriver = getModifiedChromeDriver();
+        chromeDriver.get(url);
+        String pageText = chromeDriver.findElement(By.tagName("body")).getText();
+        chromeDriver.quit();
+        if (pageText.contains(keyword)){
+            int count=countOccurrences(pageText.toLowerCase(), keyword.toLowerCase());
+            System.out.println("the key word "+keyword+" was found "+count+" times.");
+            return count;
+        }
+        System.out.println("the key word "+keyword+" was not found!");
+        return 0;
+    }
+    public static ArrayList<String> getImageUrls(String url) {
+        ChromeDriver chromeDriver = getModifiedChromeDriver();
+        chromeDriver.get(url);
+
+        List<WebElement> imageElements = chromeDriver.findElements(By.tagName("img"));
+        ArrayList<String> imageUrls = new ArrayList<>();
+
+        // Extract URLs from image elements
+        for (WebElement imageElement : imageElements) {
+            String imageSrc = imageElement.getAttribute("src");
+            if (imageSrc != null && !imageSrc.isEmpty()) {
+                imageUrls.add(imageSrc);
+            }
+        }
+        chromeDriver.quit();
+        return imageUrls;
+    }
+    public static ArrayList<String> getVideoUrls(String url){
        ChromeDriver chromeDriver= getModifiedChromeDriver();
         chromeDriver.get(url);
 
         List<WebElement> videoElements = chromeDriver.findElements(By.tagName("video"));
-        List<String> videoUrls = new ArrayList<>();
+        ArrayList<String> videoUrls = new ArrayList<>();
 
         // Extract URLs from video elements
         for (WebElement videoElement : videoElements) {
@@ -33,33 +78,55 @@ public class SeleniumScrapper {
         chromeDriver.quit();
         return videoUrls;
     }
-    public static List<String> getImagesUrls(String url) {
-        //String url =Utility.promptUrl();s
-        ChromeDriver chromeDriver = getModifiedChromeDriver();
+    public static List<String> getPdfUrls(String url) {
+        WebDriver chromeDriver = getModifiedChromeDriver();
         chromeDriver.get(url);
-
-        List<WebElement> imageElements = chromeDriver.findElements(By.tagName("img"));
-        List<String> imageUrls = new ArrayList<>();
-
-        // Extract URLs from image elements
-        for (WebElement imageElement : imageElements) {
-            String imageSrc = imageElement.getAttribute("src");
-            if (imageSrc != null && !imageSrc.isEmpty()) {
-                imageUrls.add(imageSrc);
-            }
+        List<String> pdfUrls = new ArrayList<>();
+        extractPdfLinks(chromeDriver, pdfUrls);
+        List<WebElement> iframes = chromeDriver.findElements(By.tagName("iframe"));
+        for (WebElement iframe : iframes) {
+            chromeDriver.switchTo().frame(iframe);
+            extractPdfLinks(chromeDriver, pdfUrls);
+            chromeDriver.switchTo().defaultContent();
         }
         chromeDriver.quit();
-        return imageUrls;
+        return pdfUrls;
     }
-    public static int getKeyWordAmountOfOccurrences(String url, String keyword) {
-        ChromeDriver chromeDriver = getModifiedChromeDriver();
-        chromeDriver.get(url);
-        String pageText = chromeDriver.findElement(By.tagName("body")).getText();
-        chromeDriver.quit();
-        return Utility.countOccurrences(pageText.toLowerCase(),keyword.toLowerCase());
+    private static void extractPdfLinks(WebDriver driver, List<String> pdfLinks) {
+        List<WebElement> links = driver.findElements(By.cssSelector("a[href$='.pdf']"));
+        for (WebElement link : links) {
+            String href = link.getAttribute("href");
+            if (href != null && !pdfLinks.contains(href)) {
+                pdfLinks.add(href);
+            }
+        }
     }
-
-    private static ChromeDriver getModifiedChromeDriver(){
+    public static List<String> getWordDocumentLinks(String url) {
+        WebDriver driver = getModifiedChromeDriver();
+        driver.get(url);
+        List<String> wordLinks = new ArrayList<>();
+        extractLinks(driver, wordLinks, "doc");
+        extractLinks(driver, wordLinks, "docx");
+        List<WebElement> iframes = driver.findElements(By.tagName("iframe"));
+        for (WebElement iframe : iframes) {
+            driver.switchTo().frame(iframe);
+            extractLinks(driver, wordLinks, "doc");
+            extractLinks(driver, wordLinks, "docx");
+            driver.switchTo().defaultContent();
+        }
+        driver.quit();
+        return wordLinks;
+    }
+    private static void extractLinks(WebDriver driver, List<String> wordLinks, String extension) {
+        List<WebElement> links = driver.findElements(By.cssSelector("a[href$='." + extension + "']"));
+        for (WebElement link : links) {
+            String href = link.getAttribute("href");
+            if (href != null && !wordLinks.contains(href)) {
+                wordLinks.add(href);
+            }
+        }
+    }
+    private static ChromeDriver getModifiedChromeDriver() {
         System.setProperty("webdriver.openqa.driver", "path/to/chromedriver.exe");
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless"); // Enable headless mode
@@ -69,4 +136,10 @@ public class SeleniumScrapper {
         options.addArguments("user-agent=" + Utility.getRandomUserAgent());
         return new ChromeDriver(options);
     }
+
+
+    //pdf, doc, docx, xls, xlsx, ppt, pptx, mp3, mp4;
+
+
+
 }
