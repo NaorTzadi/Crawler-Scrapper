@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.*;
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
 public class Utility {
@@ -11,8 +12,7 @@ public class Utility {
     public static void isConnected(){
         try {InetAddress address = InetAddress.getByName("8.8.8.8");
             boolean isReachable = address.isReachable(5000);
-            if (isReachable) {System.out.println("Internet connection is available.");
-            } else {System.out.println("No internet connection.");shouldCheckConnection();}
+            if(!isReachable){System.out.println("No internet connection.");shouldCheckConnection();}
         } catch (UnknownHostException e) {System.out.println("Unknown host: " + e.getMessage());shouldCheckConnection();
         } catch (Exception e) {System.out.println("An error occurred: " + e.getMessage());shouldCheckConnection();}
     }
@@ -46,7 +46,6 @@ public class Utility {
             try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
                 String line;
                 boolean isUserAgentRelevant = false;
-                System.out.println("access allowed.");
                 boolean isAllowed = true; // Default to true
 
                 while ((line = in.readLine()) != null) {
@@ -57,7 +56,6 @@ public class Utility {
                     } else if (isUserAgentRelevant && line.toLowerCase().startsWith("disallow")) {
                         String disallowedPath = line.substring(9).trim();
                         if (!disallowedPath.isEmpty() && url.getPath().startsWith(disallowedPath)) {
-                            System.out.println("access not allowed.");
                             isAllowed = false;
                             break; // Once disallowed, no need to check further
                         }
@@ -65,14 +63,12 @@ public class Utility {
                 }
                 return isAllowed;
             }
-        } catch (FileNotFoundException e) {// The robots.txt file does not exist
+        } catch (FileNotFoundException e) {
             System.out.println("The robots.txt file does not exist.");
             return true;
-        } catch (IOException e) {// Some other IO issue occurred (e.g., network problem)
-            e.printStackTrace();
+        } catch (IOException e) {
             return false;
-        } catch (Exception e) {// Catch any other unexpected exceptions
-            e.printStackTrace();
+        } catch (Exception e) {
             return false;
         }
     }
@@ -108,32 +104,31 @@ public class Utility {
             throw new Exception("Unable to retrieve user agent");
         }
     }
-    public static String promptUrl() { // WebScrapperUtility
+    public static String promptUrl() {
         Scanner scanner = new Scanner(System.in);
-        System.out.println("you can press 0 at anytime to go back.");
-        System.out.println("choose a url:");
-        String url = scanner.nextLine();
-        if (url.equals("0")) {return "0";}
-        if (!Utility.isValidUrl(url)) {
-            System.out.println("invalid url!");
-            System.out.println();
-            return "-1";
-        }
+        int counter=0;
+        String url;
+        do {
+            if(counter>0){System.out.println("invalid url!");}
+            System.out.println("you can press 0 at anytime to go back.");
+            System.out.println("insert a url:");
+            url=scanner.nextLine();
+            if (url.equals("0")){return "0";}
+            counter++;
+        }while (!Utility.isValidUrl(url));
         return url;
     }
-    public static int countOccurrences(String text, String keyWord) { // WebScrapperUtility
-        String[] words = text.split("\\s+");
-        int count = 0;
-        for (String word : words) {
-            if (word.equalsIgnoreCase(keyWord)) {
-                count++;
-            }
-        }
-        return count;
+
+    public static ArrayList<String> getUrlsToTest(){ // רק לצורך בדיקות
+        ArrayList<String> urlsToTest=new ArrayList<>();
+        urlsToTest.add("https://www.pexels.com/");
+        urlsToTest.add("https://books.toscrape.com/");
+        urlsToTest.add("https://store.steampowered.com/app/1172470/Apex_Legends/");
+        urlsToTest.add("https://www.dwsamplefiles.com/download-doc-sample-files/");
+        urlsToTest.add("https://www.sciencedirect.com/science/article/pii/S2090123219301079");
+        urlsToTest.add("https://www.freefullpdf.com/search_gcse/?q=sic%20power%20devices#gsc.tab=0&gsc.q=sic%20power%20devices&gsc.page=1");
+        return urlsToTest;
     }
-
-
-
     public static int getRandomDelay() {return 1000 + new Random().nextInt(9000);} //כאשר יש כמה בקשות שמתרחשות בפונקציה
 
 }
