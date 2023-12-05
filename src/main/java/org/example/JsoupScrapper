@@ -1,0 +1,105 @@
+package org.example;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Scanner;
+public class JsoupScrapper extends WebScrapper {
+    public static WebScrapperDataBase getAllScrapedInfo(String url){
+        WebScrapperDataBase webScrapperData=new WebScrapperDataBase(url,getContentType(url),getImageUrls(url),getVideoUrls(url));
+
+        //נכניס כאן קוד
+
+
+        System.out.println(webScrapperData);
+        System.out.println();
+        return webScrapperData;
+    }
+
+    public static int getKeyWordAmountOfOccurrences(String url) {
+        Scanner scanner=new Scanner(System.in);
+        System.out.println("choose a key word to search for:");
+        String keyword=scanner.nextLine();
+        if(keyword.equals("0")){return -1;}
+        try {
+            Document doc = Jsoup.connect(url).userAgent(Utility.getRandomUserAgent()).execute().parse();
+            String fullText = doc.text();
+            String titleText = doc.title();
+            String textWithoutTitle = fullText.replace(titleText, "");
+
+            if (textWithoutTitle.contains(keyword)) {
+                int count=countOccurrences(textWithoutTitle.toLowerCase(), keyword.toLowerCase());
+                System.out.println("the key word "+keyword+" was found "+count+" times.");
+               return count;
+            }else {
+                System.out.println("the key word "+keyword+" was not found!");
+            }
+        } catch (IOException e) {
+            System.err.println("Error fetching URL: " + e.getMessage());
+        }
+        return 0;
+    }
+    public static ArrayList<String> getImageUrls(String url) {
+        ArrayList<String> imageLinks = new ArrayList<>();
+        try {
+            Document doc = Jsoup.connect(url).userAgent(Utility.getRandomUserAgent()).execute().parse();
+            Elements imageElements = doc.select("img[src]"); // Select all image elements with src attribute
+            for (Element img : imageElements) {
+                String imgSrc = img.attr("abs:src"); // Extract absolute URL of the image
+                if (!imgSrc.isEmpty()) {
+                    imageLinks.add(imgSrc);
+                    //System.out.print(" " + imgSrc + ",");
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error fetching image links from " + url + ": " + e.getMessage());
+        }
+        return imageLinks;
+    }
+
+    public static ArrayList<String> getVideoUrls(String url) {
+        ArrayList<String> videoUrls = new ArrayList<>();
+        try {
+            Document doc = Jsoup.connect(url).userAgent(Utility.getRandomUserAgent()).execute().parse();
+            Elements videoElements = doc.select("video");
+            boolean videosFound = false;
+            for (Element video : videoElements) {
+                String videoSrc = video.attr("src");
+                if (!videoSrc.isEmpty()) {
+                    //System.out.println("Found video URL: " + videoSrc);
+                    videoUrls.add(videoSrc);
+                    videosFound = true;
+                }
+                Elements sourceElements = video.select("source"); // Check for video sources inside <source> tags
+                for (Element source : sourceElements) {
+                    String sourceSrc = source.attr("src");
+                    if (!sourceSrc.isEmpty()) {
+                        //System.out.println("Found video source URL: " + sourceSrc);
+                        videoUrls.add(sourceSrc);
+                        videosFound = true;
+                    }
+                }
+            }
+            if (!videosFound) {System.out.println("No videos found on the webpage.");}
+        } catch (IOException e) {System.err.println("Error fetching page: " + e.getMessage());}
+        return videoUrls;
+    }
+
+/*    public static ArrayList<String> getPdfUrls(String url) {
+        ArrayList<String> pdfLinks = new ArrayList<>();
+        Document doc;
+        try {
+            doc = Jsoup.connect(url).get();
+            Elements links = doc.select("a[href$=.pdf]");
+            for (Element link : links) {
+                String absHref = link.attr("abs:href"); // Get absolute URL
+                pdfLinks.add(absHref);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return pdfLinks;
+    }*/
+}
