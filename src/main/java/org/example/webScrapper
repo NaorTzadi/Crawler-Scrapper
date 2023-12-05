@@ -1,90 +1,177 @@
 package org.example;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import java.io.IOException;
-import java.util.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 public class WebScrapper {
-    public static WebScrapperDataBase getScrappedInfo(String url){
-        WebScrapperDataBase webScrapperDataBase=new WebScrapperDataBase(url,null);
-        HashMap<String,Integer> keyWordAppearanceCount=new HashMap<>();
-
+    private static final String getAllScrapedInfo="1";
+    private static final String getKeyWordAmountOfOccurrences="2";
+    private static final String getImageUrls="3";
+    private static final String getVideoUrls="4";
+    public static Object webScrapperOperator(String url,String option){
         Utility.isConnected();
-        Utility.isAccessAllowed(url);
-
-
-        return webScrapperDataBase;
+        if (Utility.isAccessAllowed(url)){
+            if (option.equals(getAllScrapedInfo)){
+                return JsoupScrapper.getAllScrapedInfo(url);
+            }else if (option.equals(getKeyWordAmountOfOccurrences)){
+                return JsoupScrapper.getKeyWordAmountOfOccurrences(url);
+            } else if (option.equals(getImageUrls)) {
+                return JsoupScrapper.getImageUrls(url);
+            } else if (option.equals(getVideoUrls)) {
+                return JsoupScrapper.getVideoUrls(url);
+            }
+        }else {
+            if (option.equals(getAllScrapedInfo)){
+                return SeleniumScrapper.getAllScrapedInfo(url);
+            }else if (option.equals(getKeyWordAmountOfOccurrences)){
+                return SeleniumScrapper.getKeyWordAmountOfOccurrences(url);
+            } else if (option.equals(getImageUrls)) {
+                return SeleniumScrapper.getImageUrls(url);
+            } else if (option.equals(getVideoUrls)) {
+                return SeleniumScrapper.getVideoUrls(url);
+            }
+        }
+        return null;
     }
-    public static ArrayList<String> getVideoUrls() {
-        String url = Utility.promptUrl();
-        if (url.equals("0")) {return null;} else if (url.equals("-1")) {return getVideoUrls();}
-        ArrayList<String> videoUrls = new ArrayList<>();
+    public static int countOccurrences(String text, String keyWord) { // WebScrapperUtility
+        String[] words = text.split("\\s+");
+        int count = 0;
+        for (String word : words) {
+            if (word.equalsIgnoreCase(keyWord)) {
+                count++;
+            }
+        }
+        return count;
+    }
+    public static String getContentType(String urlString) {
+        HttpURLConnection connection = null;
         try {
-            Document doc = Jsoup.connect(url).userAgent(Utility.getRandomUserAgent()).execute().parse();
-            Elements videoElements = doc.select("video");
-            boolean videosFound = false;
-            for (Element video : videoElements) {
-                String videoSrc = video.attr("src");
-                if (!videoSrc.isEmpty()) {
-                    System.out.println("Found video URL: " + videoSrc);
-                    videoUrls.add(videoSrc);
-                    videosFound = true;
-                }
-                Elements sourceElements = video.select("source"); // Check for video sources inside <source> tags
-                for (Element source : sourceElements) {
-                    String sourceSrc = source.attr("src");
-                    if (!sourceSrc.isEmpty()) {
-                        System.out.println("Found video source URL: " + sourceSrc);
-                        videoUrls.add(sourceSrc);
-                        videosFound = true;
-                    }
+            URL url = new URL(urlString);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("HEAD");
+            connection.setConnectTimeout(10000); // 10 seconds connect timeout
+            connection.setReadTimeout(10000); // 10 seconds read timeout
+            connection.connect();
+
+            String contentType = connection.getContentType();
+            return contentType != null ? contentType : "Content type not available";
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "Error occurred: " + e.getMessage();
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
+/*    public static boolean doesContainJavaScriptFiles(String url) {
+        try {
+            Document doc = Jsoup.connect(url).get();
+            Elements scriptElements = doc.select("script[src]");
+
+            for (Element script : scriptElements) {
+                String src = script.attr("src");
+                if (src.endsWith(".js") || src.endsWith(".mjs")) {
+                    //System.out.println("JavaScript file found: " + src);
+                    return true;
                 }
             }
-            if (!videosFound) {System.out.println("No videos found on the webpage.");}
-        } catch (IOException e) {System.err.println("Error fetching page: " + e.getMessage());}
-        return videoUrls;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
-    public static List<String> getImageUrls() {
-        String url = Utility.promptUrl();
-        if (url.equals("0")) {return null;} else if (url.equals("-1")) {return getImageUrls();}
-        List<String> imageLinks = new ArrayList<>();
+    public static boolean doesContainJavascriptPdfFiles(String url) {
         try {
-            Document doc = Jsoup.connect(url).userAgent(Utility.getRandomUserAgent()).execute().parse();
-            Elements imageElements = doc.select("img[src]"); // Select all image elements with src attribute
-            for (Element img : imageElements) {
-                String imgSrc = img.attr("abs:src"); // Extract absolute URL of the image
-                if (!imgSrc.isEmpty()) {
-                    imageLinks.add(imgSrc);
-                    System.out.print(" " + imgSrc + ",");
+            Document doc = Jsoup.connect(url).get();
+            Elements pdfElements = doc.select("a[href$='.pdf']");
+
+            for (Element pdfLink : pdfElements) {
+                String href = pdfLink.attr("href");
+                if (href != null && !href.isEmpty()) {
+                    return true;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }*/
+
+
+    public static ArrayList<String> getSupportedMethods(String urlStr) {
+        HttpURLConnection connection = null;
+        ArrayList<String> supportedMethods = new ArrayList<>();
+        try {
+            URL url = new URL(urlStr);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("OPTIONS");
+            connection.connect();
+
+            // Retrieve the Allow header
+            Map<String, List<String>> headers = connection.getHeaderFields();
+            List<String> allowHeader = headers.get("Allow");
+
+            if (allowHeader != null && !allowHeader.isEmpty()) {
+                // Split the Allow header's value into individual methods and add to the list
+                for (String methods : allowHeader) {
+                    supportedMethods.addAll(Arrays.asList(methods.split(", ")));
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error fetching image links from " + url + ": " + e.getMessage());
-        }
-        return imageLinks;
-    }
-
-    public static void getKeyWordAmountOfOccurrences() {
-        Scanner scanner=new Scanner(System.in);
-        String url=Utility.promptUrl();
-        if (url.equals("0")){return;}else if (url.equals("-1")){
-            getKeyWordAmountOfOccurrences();return;}
-        System.out.println("choose a key word to search for:");
-        String keyWord=scanner.nextLine();
-        if(keyWord.equals("0")){return;}
-        try {
-            Document doc = Jsoup.connect(url).userAgent(Utility.getRandomUserAgent()).execute().parse();
-            String fullText = doc.text();
-            String titleText = doc.title();
-            String textWithoutTitle = fullText.replace(titleText, "");
-            if (!textWithoutTitle.contains(keyWord)) {
-                System.out.println("The keyword '" + keyWord + "' was found " + Utility.countOccurrences(textWithoutTitle.toLowerCase(), keyWord.toLowerCase()) + " times.");
+            e.printStackTrace();
+            // Optionally, handle specific exceptions or return an error message
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
             }
-        } catch (IOException e) {
-            System.err.println("Error fetching URL: " + e.getMessage());
         }
+        if(supportedMethods.isEmpty()){System.out.println("No Allow header present for " + urlStr);}
+        return supportedMethods;
     }
 
+
+    public static String measureResponseTime(String urlStr, String requestType) {
+        HttpURLConnection connection = null;
+        long startTime, endTime, responseTime;
+        try {
+            URL url = new URL(urlStr);
+            connection = (HttpURLConnection) url.openConnection();
+
+            // Set the request type
+            connection.setRequestMethod(requestType);
+
+            // For POST requests, enable output
+            if ("POST".equalsIgnoreCase(requestType)) {
+                connection.setDoOutput(true);
+                // You might want to send some data in the POST request body
+                // Example: connection.getOutputStream().write(postDataBytes);
+            }
+
+            // Start the timer
+            startTime = System.currentTimeMillis();
+
+            // Connect to the URL
+            connection.connect();
+
+            // Stop the timer
+            endTime = System.currentTimeMillis();
+
+            // Calculate response time
+            responseTime = endTime - startTime;
+            return requestType + " request response time for " + urlStr + ": " + responseTime + " milliseconds";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error in measuring response time for " + requestType + " request";
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
 
 }
