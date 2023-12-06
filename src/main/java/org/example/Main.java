@@ -6,8 +6,6 @@ public class Main {
     private final static ArrayList<WebCrawlerDataBase> webCrawlerDataBase=new ArrayList<>();
     private final static ArrayList<WebScrapperDataBase> webScrapperDataBase=new ArrayList<>();
     public static void main(String[] args) {
-        System.out.println(SeleniumScrapper.getWordDocumentLinks("https://www.dwsamplefiles.com/download-doc-sample-files/"));
-        //System.out.println(SeleniumScrapper.getPdfUrls("https://www.sciencedirect.com/science/article/pii/S2090123219301079"));
         //for(String url:Utility.getUrlsToTest()){System.out.println( WebScrapper.getContentType(url));}
         //for(String url:Utility.getUrlsToTest()){System.out.println(Utility.isAccessAllowed(url));}
         Utility.isConnected();
@@ -94,10 +92,9 @@ public class Main {
         }while (!decision.equals(option1) && !decision.equals(option2) && !decision.equals(option3)&&!decision.equals(option4)&&!decision.equals(option5)&&!decision.equals(option6)&&!decision.equals(option7));
         String url=Utility.promptUrl();
         if (url.equals("0")){webScrapperOptionsMenu();return;}
-        hasScrapped(url);
         //if(Integer.parseInt(decision)>=2 && Integer.parseInt(decision)<=4){WebScrapper.webScrapperOperator(url,decision);}
         if(decision.equals(option1)){
-            webScrapperDataBase.add((WebScrapperDataBase) WebScrapper.webScrapperOperator(url,option1));
+            hasScrapped(url);webScrapperDataBase.add((WebScrapperDataBase) WebScrapper.webScrapperOperator(url,option1));
         }else if (decision.equals(option2)){
             WebScrapper.webScrapperOperator(url,option2);
         }else if (decision.equals(option3)){
@@ -196,6 +193,24 @@ public class Main {
             if(url.equals(data.getUrl())){
                 System.out.println("url already exists in history:");
                 System.out.println(data);
+            }
+        }
+        if (!Utility.isMainPageUrl(url)){
+            String decision;
+            final String getMainWebsiteUrl="1";final String keepCurrentUrl="2";
+            do {
+                System.out.println("the url you gave is not the website main url!");
+                System.out.println("press 1 to get the main website url.");
+                System.out.println("press 2 to proceed with the current url.");
+                decision=scanner.nextLine();
+            }while (!decision.equals(getMainWebsiteUrl) && !decision.equals(keepCurrentUrl));
+            if (decision.equals(getMainWebsiteUrl)){
+                String mainWebsiteUrl=Utility.getMainPageUrl(url);
+                if (mainWebsiteUrl!=null && !mainWebsiteUrl.isEmpty()){
+                    url=mainWebsiteUrl;
+                }else {
+                    System.out.println("could not find main website url, continuing with current url.");
+                }
             }
         }
         WebCrawlerDataBase webCrawlerData=WebCrawler.getAnalyzedInfo(url);
