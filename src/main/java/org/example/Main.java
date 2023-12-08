@@ -1,16 +1,41 @@
 package org.example;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
 public class Main {
     private final static ArrayList<WebCrawlerDataBase> webCrawlerDataBase=new ArrayList<>();
     private final static ArrayList<WebScrapperDataBase> webScrapperDataBase=new ArrayList<>();
     public static void main(String[] args) {
+        String urlToTest="https://www.dwsamplefiles.com/download-doc-sample-files/";
+
+        System.out.println(FileLinksExtractor.FileLinksExtractor(Utility.getMainDomainUrl(urlToTest),SeleniumScrapper.extractHyperlinks(urlToTest)));
+
+        List<String> links1=SeleniumScrapper.getSuspectedDownloadLinks(SeleniumScrapper.extractHyperlinks(urlToTest),Utility.getMainDomainUrl(urlToTest));
+        for(String link:links1){
+            System.out.println(link);
+        }
+        System.out.println(links1.size());
+
+        List<String> links2=SeleniumScrapper.extractHyperlinks(urlToTest);
+        for(String link:links2){
+            System.out.println(link);
+        }
+        System.out.println(links2.size());
+
+           /*List<String> links=SeleniumScrapper.extractHyperlinks("https://www.sciencedirect.com/science/article/pii/S2090123219301079");
+        for(String link:links){
+            if (link.endsWith("pdf")){
+                System.out.println(link+": pdf link");
+            }
+        }*/
+
         //for(String url:Utility.getUrlsToTest()){System.out.println( WebScrapper.getContentType(url));}
         //for(String url:Utility.getUrlsToTest()){System.out.println(Utility.isAccessAllowed(url));}
         Utility.isConnected();
         mainMenu();
     }
+
 
     private static void mainMenu(){
         final String option1="1"; final String option2="2";final String option3="3";
@@ -205,7 +230,7 @@ public class Main {
                 decision=scanner.nextLine();
             }while (!decision.equals(getMainWebsiteUrl) && !decision.equals(keepCurrentUrl));
             if (decision.equals(getMainWebsiteUrl)){
-                String mainWebsiteUrl=Utility.getMainPageUrl(url);
+                String mainWebsiteUrl=Utility.getMainDomainUrl(url);
                 if (mainWebsiteUrl!=null && !mainWebsiteUrl.isEmpty()){
                     url=mainWebsiteUrl;
                 }else {
