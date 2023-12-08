@@ -1,0 +1,63 @@
+package org.example;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+public class FileLinksExtractor {
+
+    public static List<String> FileLinksExtractor(String mainDomain,List<String> links){
+
+        for(String link:links){
+            if(!link.contains(mainDomain)|| link.length()>200){
+                links.remove(link);
+            }
+            String[] nonDownloadKeywords = new String[]{"read", "view", "login", "sign in", "about", "contact", "learn more", "get started", "subscribe"};
+            String lowerCaseLink = link.toLowerCase();
+            for (String keyword : nonDownloadKeywords) {
+                if (lowerCaseLink.contains(keyword)) {
+                    System.out.println(link+" not download file!");
+                    links.remove(link);
+                }
+            }
+            if (lowerCaseLink.matches(".*/article/.*|.*\\?id=.*|.*\\?article=.*|.*\\?post=.*") || lowerCaseLink.endsWith(".html") || lowerCaseLink.endsWith(".php") || lowerCaseLink.endsWith(".asp")) {
+                System.out.println(link+" not download file!");
+                links.remove(link);
+            }
+
+        }
+        List<String> downloadLinks = new ArrayList<>();
+        for (String link : links) {
+            if (isDownloadLink(link)) {
+                downloadLinks.add(link);
+            }
+        }
+        return downloadLinks;
+
+    }
+
+    private static boolean isDownloadLink(String link) {
+        try {
+            URL url = new URL(link);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("HEAD");
+            connection.connect();
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                String contentDisposition = connection.getHeaderField("Content-Disposition");
+                String contentType = connection.getHeaderField("Content-Type");
+
+                // Check for attachment in Content-Disposition and non-html Content-Type
+                if ((contentDisposition != null && contentDisposition.contains("attachment")) ||
+                        (contentType != null && !contentType.contains("text/html"))) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+}
