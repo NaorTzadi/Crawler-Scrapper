@@ -4,16 +4,12 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-
 public class SeleniumScrapper extends WebScrapper {
     public static WebScrapperDataBase getAllScrapedInfo(String url){
         WebScrapperDataBase webScrapperData=new WebScrapperDataBase(url,getContentType(url),getImageUrls(url),getVideoUrls(url));
-
-        //נכניס כאן קוד
 
         System.out.println(webScrapperData);
         System.out.println();
@@ -39,11 +35,8 @@ public class SeleniumScrapper extends WebScrapper {
     public static ArrayList<String> getImageUrls(String url) {
         ChromeDriver chromeDriver = getModifiedChromeDriver();
         chromeDriver.get(url);
-
         List<WebElement> imageElements = chromeDriver.findElements(By.tagName("img"));
         ArrayList<String> imageUrls = new ArrayList<>();
-
-        // Extract URLs from image elements
         for (WebElement imageElement : imageElements) {
             String imageSrc = imageElement.getAttribute("src");
             if (imageSrc != null && !imageSrc.isEmpty()) {
@@ -56,17 +49,13 @@ public class SeleniumScrapper extends WebScrapper {
     public static ArrayList<String> getVideoUrls(String url){
        ChromeDriver chromeDriver= getModifiedChromeDriver();
         chromeDriver.get(url);
-
         List<WebElement> videoElements = chromeDriver.findElements(By.tagName("video"));
         ArrayList<String> videoUrls = new ArrayList<>();
-
-        // Extract URLs from video elements
         for (WebElement videoElement : videoElements) {
             String videoSrc = videoElement.getAttribute("src");
             if (videoSrc != null && !videoSrc.isEmpty()) {
                 videoUrls.add(videoSrc);
             }
-            // Check for <source> elements inside <video> tags
             List<WebElement> sourceElements = videoElement.findElements(By.tagName("source"));
             for (WebElement sourceElement : sourceElements) {
                 String sourceSrc = sourceElement.getAttribute("src");
@@ -101,42 +90,69 @@ public class SeleniumScrapper extends WebScrapper {
             }
         }
     }
-    public static List<String> getWordDocumentLinks(String url) {
-        WebDriver driver = getModifiedChromeDriver();
+    public static List<String> extractHyperlinks(String url) {
+        ChromeDriver driver = getModifiedChromeDriver();
         driver.get(url);
-        List<String> wordLinks = new ArrayList<>();
-        extractLinks(driver, wordLinks, "doc");
-        extractLinks(driver, wordLinks, "docx");
+        List<String> allUrls = new ArrayList<>();
+        extractAllHyperLinks(driver, allUrls);
         List<WebElement> iframes = driver.findElements(By.tagName("iframe"));
         for (WebElement iframe : iframes) {
             driver.switchTo().frame(iframe);
-            extractLinks(driver, wordLinks, "doc");
-            extractLinks(driver, wordLinks, "docx");
+            extractAllHyperLinks(driver, allUrls);
             driver.switchTo().defaultContent();
         }
         driver.quit();
-        return wordLinks;
+        return allUrls;
     }
-    private static void extractLinks(WebDriver driver, List<String> wordLinks, String extension) {
-        List<WebElement> links = driver.findElements(By.cssSelector("a[href$='." + extension + "']"));
+    private static void extractAllHyperLinks(WebDriver driver, List<String> allLinks) {
+        List<WebElement> links = driver.findElements(By.tagName("a"));
         for (WebElement link : links) {
             String href = link.getAttribute("href");
-            if (href != null && !wordLinks.contains(href)) {
-                wordLinks.add(href);
+            if (href != null && !allLinks.contains(href)) {
+                allLinks.add(href);
             }
         }
+    }
+
+    public static List<String> getSuspectedDownloadLinks(List<String> allLinks,String mainDomain){
+        allLinks.removeIf(link -> !isSuspectedDownloadLink(link, mainDomain));
+        return allLinks;
+    }
+    private static boolean isSuspectedDownloadLink(String link,String mainDomain) {
+        if(!link.contains(mainDomain) || link.length()>200){
+            System.out.println(link+" not download file!");
+            return false;
+        }
+        // Check if the link contains non-download keywords
+        String[] nonDownloadKeywords = new String[]{"read", "view", "login", "sign in", "about", "contact", "learn more", "get started", "subscribe"};
+        String lowerCaseLink = link.toLowerCase();
+        for (String keyword : nonDownloadKeywords) {
+            if (lowerCaseLink.contains(keyword)) {
+                System.out.println(link+" not download file!");
+                return false;
+            }
+        }
+
+        // Check additional URL structure
+        if (lowerCaseLink.matches(".*/article/.*|.*\\?id=.*|.*\\?article=.*|.*\\?post=.*") || lowerCaseLink.endsWith(".html") || lowerCaseLink.endsWith(".php") || lowerCaseLink.endsWith(".asp")) {
+            System.out.println(link+" not download file!");
+            return false;
+        }
+
+        // Check based on file extensions
+
+        return true; // Default to false if no other criteria are met
     }
     private static ChromeDriver getModifiedChromeDriver() {
         System.setProperty("webdriver.openqa.driver", "path/to/chromedriver.exe");
         ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless"); // Enable headless mode
-        options.addArguments("--disable-gpu"); // Disable GPU (recommended for headless mode)
+        options.addArguments("--headless");
+        options.addArguments("--disable-gpu");
         options.addArguments("--disable-notifications");
         options.addArguments("--enable-automation");
         options.addArguments("user-agent=" + Utility.getRandomUserAgent());
         return new ChromeDriver(options);
     }
-
 
     //pdf, doc, docx, xls, xlsx, ppt, pptx, mp3, mp4;
 
