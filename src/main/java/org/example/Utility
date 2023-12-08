@@ -1,16 +1,10 @@
 package org.example;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.*;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 public class Utility {
@@ -124,7 +118,7 @@ public class Utility {
         }while (!Utility.isValidUrl(url));
         return url;
     }
-    public static String getMainPageUrl(String url) {
+    public static String getMainDomainUrl(String url) {
         try {
             URL parsedUrl = new URL(url);
             String protocol = parsedUrl.getProtocol();
@@ -141,25 +135,6 @@ public class Utility {
         }
     }
     public static boolean isMainPageUrl(String url) {try {return !new URL(url).getPath().matches(".*/[^/]+/[^/]+.*");} catch (Exception e) {return false;}}
-
-    public static List<String> extractHyperlinks(String url) {
-        List<String> hyperlinks = new ArrayList<>();
-        try {
-            Document document = Jsoup.connect(url).get();// Fetch the HTML content from the URL
-            Elements links = document.select("a");// Select all anchor (<a>) elements
-            for (Element link : links) { // Extract href attribute from each anchor element
-                String href = url+link.attr("href")+"\n";
-                hyperlinks.add(href);
-            }
-        } catch (IOException e) {}
-        return hyperlinks;
-    }
-    public static boolean isFileDownloadLink(String url) {
-        return url.endsWith(".pdf") || url.endsWith(".doc") || url.endsWith(".docx")
-                || url.endsWith(".xls") || url.endsWith(".xlsx") || url.endsWith(".ppt")
-                || url.endsWith(".pptx") || url.endsWith(".txt") || url.endsWith(".zip")
-                || url.endsWith(".rar");
-    }
 
     public static ArrayList<String> getUrlsToTest(){ // רק לצורך בדיקות
         ArrayList<String> urlsToTest=new ArrayList<>();
