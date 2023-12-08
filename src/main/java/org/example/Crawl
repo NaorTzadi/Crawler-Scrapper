@@ -16,6 +16,7 @@ public class Crawl {// how can i make a certain class be accessed only by anothe
     public WebCrawlerDataBase startCrawling(String url, WebCrawlerDataBase webCrawlerData){
         // מה קןרה במצב בו אתר מסויים דורש שימוש רצוף בעוגיות במהלך השימוש
         // יתכנו תוספות נוספות למחלקה
+        // אפשרויות למנוע מהזחל כניסה לקישורים של מודעות קופצות
         crawl(url);
         webCrawlerData.setLinksList(new ArrayList<>(visitedLinks));
         webCrawlerData.setUniqueLinksCount(new ArrayList<>(visitedLinks).size());
