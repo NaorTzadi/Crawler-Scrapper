@@ -10,9 +10,6 @@ public class JsoupScrapper extends WebScrapper {
     public static WebScrapperDataBase getAllScrapedInfo(String url){
         WebScrapperDataBase webScrapperData=new WebScrapperDataBase(url,getContentType(url),getImageUrls(url),getVideoUrls(url));
 
-        //נכניס כאן קוד
-
-
         System.out.println(webScrapperData);
         System.out.println();
         return webScrapperData;
@@ -87,19 +84,4 @@ public class JsoupScrapper extends WebScrapper {
         return videoUrls;
     }
 
-/*    public static ArrayList<String> getPdfUrls(String url) {
-        ArrayList<String> pdfLinks = new ArrayList<>();
-        Document doc;
-        try {
-            doc = Jsoup.connect(url).get();
-            Elements links = doc.select("a[href$=.pdf]");
-            for (Element link : links) {
-                String absHref = link.attr("abs:href"); // Get absolute URL
-                pdfLinks.add(absHref);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return pdfLinks;
-    }*/
 }
