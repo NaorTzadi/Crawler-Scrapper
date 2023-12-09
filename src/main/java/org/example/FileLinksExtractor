@@ -1,63 +1,161 @@
 package org.example;
+import org.openqa.selenium.*;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-
 public class FileLinksExtractor {
-
-    public static List<String> FileLinksExtractor(String mainDomain,List<String> links){
-
-        for(String link:links){
-            if(!link.contains(mainDomain)|| link.length()>200){
-                links.remove(link);
-            }
-            String[] nonDownloadKeywords = new String[]{"read", "view", "login", "sign in", "about", "contact", "learn more", "get started", "subscribe"};
-            String lowerCaseLink = link.toLowerCase();
-            for (String keyword : nonDownloadKeywords) {
-                if (lowerCaseLink.contains(keyword)) {
-                    System.out.println(link+" not download file!");
-                    links.remove(link);
-                }
-            }
-            if (lowerCaseLink.matches(".*/article/.*|.*\\?id=.*|.*\\?article=.*|.*\\?post=.*") || lowerCaseLink.endsWith(".html") || lowerCaseLink.endsWith(".php") || lowerCaseLink.endsWith(".asp")) {
-                System.out.println(link+" not download file!");
-                links.remove(link);
-            }
-
-        }
+    // צריך למצוא עוד דרכים לצמצום כמות הלינקים החשודים
+    // צריך לנסות להפחית מהמשקל של הפונקציה isDownloadLink
+    // יכול להיות שצריך להשתמש בסלניום ב-isDownloadLink כדי להוריד מהחשד של אתרים
+    //pdf, doc, docx, xls, xlsx, ppt, pptx, mp3, mp4;
+    public static List<String> FileLinksExtractor(String mainDomain, List<String> links) {
         List<String> downloadLinks = new ArrayList<>();
+        List<String> suspectedLinks = new ArrayList<>();
+        String[] downloadExtensions = new String[]{".pdf", ".doc", ".docx", ".xls", ".xlsx", ".zip", ".rar"};
+
         for (String link : links) {
-            if (isDownloadLink(link)) {
+            String lowerCaseLink = link.toLowerCase();
+            if (endsWithAny(lowerCaseLink, downloadExtensions)) {
+                downloadLinks.add(link);
+            } else if (link.contains(mainDomain) && link.length() <= 200 &&
+                    !lowerCaseLink.endsWith(".html") && !lowerCaseLink.endsWith(".php") && !lowerCaseLink.endsWith(".asp")) {
+                suspectedLinks.add(link);
+            }
+        }
+
+        ChromeDriver chromeDriver=Utility.getModifiedChromeDriver();
+        for (String link : suspectedLinks) {
+            if (isDownloadLink(link,chromeDriver)) {
                 downloadLinks.add(link);
             }
         }
+
         return downloadLinks;
-
     }
-
-    private static boolean isDownloadLink(String link) {
+    private static boolean endsWithAny(String string, String[] extensions) {
+        for (String extension : extensions) {
+            if (string.endsWith(extension)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public static boolean isDownloadLink(String link, WebDriver driver) {
         try {
-            URL url = new URL(link);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("HEAD");
-            connection.connect();
+            driver.get(link);
+            // Wait for the page to load
+            new WebDriverWait(driver, Duration.ofSeconds(10)).until(
+                    webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete")
+            );
+            // Check for signs of a CAPTCHA or robot check
+            boolean isCaptchaPage = driver.findElements(By.xpath("//*[contains(text(),'CAPTCHA')]")).size() > 0 ||
+                    driver.findElements(By.xpath("//*[contains(text(),'robot')]")).size() > 0;
 
-            int responseCode = connection.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                String contentDisposition = connection.getHeaderField("Content-Disposition");
-                String contentType = connection.getHeaderField("Content-Type");
+            if (isCaptchaPage) {
+                return true; // Assume it's a download link if CAPTCHA is detected
+            } else {
+                // Check for download indicators in headers using a head request as before
+                URL url = new URL(link);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("HEAD");
+                connection.connect();
 
-                // Check for attachment in Content-Disposition and non-html Content-Type
-                if ((contentDisposition != null && contentDisposition.contains("attachment")) ||
-                        (contentType != null && !contentType.contains("text/html"))) {
-                    return true;
+                int responseCode = connection.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    String contentDisposition = connection.getHeaderField("Content-Disposition");
+                    String contentType = connection.getHeaderField("Content-Type");
+
+                    if ((contentDisposition != null && contentDisposition.contains("attachment")) ||
+                            (contentType != null && !contentType.contains("text/html"))) {
+                        return true;
+                    }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return false;
+    }
+    public static List<String> getPdfUrls(String url) {
+        ChromeDriver chromeDriver = Utility.getModifiedChromeDriver();
+        chromeDriver.get(url);
+        List<String> pdfLinks = new ArrayList<>();
+        List<String> suspectedPdfLinks = new ArrayList<>();
+        List<String> allLinks=extractHyperLinks(url);
+        extractEmbeddedPdfLinks(chromeDriver,pdfLinks);
+        allLinks.removeAll(pdfLinks);
+        for (String link : extractHyperLinks(url)) {
+            if (link.endsWith(".pdf")) {
+                pdfLinks.add(link);
+            } else if (link.length() < 200 && link.contains("pdf")) {
+                suspectedPdfLinks.add(link);
+            }
+        }
+        for (String link : suspectedPdfLinks) {
+            if (isDownloadLink(link, chromeDriver)) {
+                pdfLinks.add(link);
+            }
+        }
+        chromeDriver.quit();
+        return pdfLinks;
+    }
+    private static void extractEmbeddedPdfLinks(WebDriver driver, List<String> pdfLinks) {
+        List<WebElement> pdfViewerElements = driver.findElements(By.xpath("//embed[@type='application/pdf']"));
+        pdfViewerElements.addAll(driver.findElements(By.xpath("//iframe[contains(@src, 'pdf')]")));
+        for (WebElement element : pdfViewerElements) {
+            String src = element.getAttribute("src");
+            if (src != null && !pdfLinks.contains(src)) {
+                pdfLinks.add(src);
+            }
+        }
+    }
+    public static List<String> extractHyperLinks(String url) {
+        ChromeDriver driver = Utility.getModifiedChromeDriver();
+        driver.get(url);
+        List<String> allLinks = new ArrayList<>();
+        extractAllHyperLinks(driver, allLinks);
+        List<WebElement> iframes = driver.findElements(By.tagName("iframe"));
+        for (WebElement iframe : iframes) {
+            driver.switchTo().frame(iframe);
+            extractAllHyperLinks(driver, allLinks);
+            driver.switchTo().defaultContent();
+        }
+        driver.quit();
+        return allLinks;
+    }
+    private static void extractAllHyperLinks(WebDriver driver, List<String> allLinks) {
+        List<WebElement> links = driver.findElements(By.tagName("a"));
+        for (int i = 0; i < links.size(); i++) {
+            try {
+                WebElement link = links.get(i);
+                String href = link.getAttribute("href");
+                if (href != null && !allLinks.contains(href)) {
+                    allLinks.add(href);
+                }
+            } catch (StaleElementReferenceException e) {
+                links = driver.findElements(By.tagName("a"));
+                i--;
+            }
+        }
+    }
+
+    public static List<String> getSuspectedDownloadLinks(String mainDomain, List<String> links){ //רק לצורך בדיקה
+        List<String> suspectedLinks = new ArrayList<>();
+        String[] downloadExtensions = new String[]{".pdf", ".doc", ".docx", ".xls", ".xlsx", ".zip", ".rar"};
+
+        for (String link : links) {
+            String lowerCaseLink = link.toLowerCase();
+            if (endsWithAny(lowerCaseLink, downloadExtensions)) {
+                suspectedLinks.add(link);
+            } else if (link.contains(mainDomain) && link.length() <= 200 && !lowerCaseLink.endsWith(".html") && !lowerCaseLink.endsWith(".php") && !lowerCaseLink.endsWith(".asp")) {
+                suspectedLinks.add(link);
+            }
+        }
+        return suspectedLinks;
     }
 
 }
