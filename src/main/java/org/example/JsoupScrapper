@@ -29,7 +29,7 @@ public class JsoupScrapper extends WebScrapper {
             if (textWithoutTitle.contains(keyword)) {
                 int count=countOccurrences(textWithoutTitle.toLowerCase(), keyword.toLowerCase());
                 System.out.println("the key word "+keyword+" was found "+count+" times.");
-               return count;
+                return count;
             }else {
                 System.out.println("the key word "+keyword+" was not found!");
             }
