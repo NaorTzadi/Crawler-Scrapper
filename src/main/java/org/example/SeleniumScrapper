@@ -1,9 +1,7 @@
 package org.example;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -20,7 +18,7 @@ public class SeleniumScrapper extends WebScrapper {
         System.out.println("choose a key word to search for:");
         String keyword=scanner.nextLine();
         if(keyword.equals("0")){return -1;}
-        ChromeDriver chromeDriver = getModifiedChromeDriver();
+        ChromeDriver chromeDriver = Utility.getModifiedChromeDriver();
         chromeDriver.get(url);
         String pageText = chromeDriver.findElement(By.tagName("body")).getText();
         chromeDriver.quit();
@@ -33,7 +31,7 @@ public class SeleniumScrapper extends WebScrapper {
         return 0;
     }
     public static ArrayList<String> getImageUrls(String url) {
-        ChromeDriver chromeDriver = getModifiedChromeDriver();
+        ChromeDriver chromeDriver = Utility.getModifiedChromeDriver();
         chromeDriver.get(url);
         List<WebElement> imageElements = chromeDriver.findElements(By.tagName("img"));
         ArrayList<String> imageUrls = new ArrayList<>();
@@ -47,7 +45,7 @@ public class SeleniumScrapper extends WebScrapper {
         return imageUrls;
     }
     public static ArrayList<String> getVideoUrls(String url){
-       ChromeDriver chromeDriver= getModifiedChromeDriver();
+        ChromeDriver chromeDriver= Utility.getModifiedChromeDriver();
         chromeDriver.get(url);
         List<WebElement> videoElements = chromeDriver.findElements(By.tagName("video"));
         ArrayList<String> videoUrls = new ArrayList<>();
@@ -67,94 +65,11 @@ public class SeleniumScrapper extends WebScrapper {
         chromeDriver.quit();
         return videoUrls;
     }
-    public static List<String> getPdfUrls(String url) {
-        WebDriver chromeDriver = getModifiedChromeDriver();
-        chromeDriver.get(url);
-        List<String> pdfUrls = new ArrayList<>();
-        extractPdfLinks(chromeDriver, pdfUrls);
-        List<WebElement> iframes = chromeDriver.findElements(By.tagName("iframe"));
-        for (WebElement iframe : iframes) {
-            chromeDriver.switchTo().frame(iframe);
-            extractPdfLinks(chromeDriver, pdfUrls);
-            chromeDriver.switchTo().defaultContent();
-        }
-        chromeDriver.quit();
-        return pdfUrls;
-    }
-    private static void extractPdfLinks(WebDriver driver, List<String> pdfLinks) {
-        List<WebElement> links = driver.findElements(By.cssSelector("a[href$='.pdf']"));
-        for (WebElement link : links) {
-            String href = link.getAttribute("href");
-            if (href != null && !pdfLinks.contains(href)) {
-                pdfLinks.add(href);
-            }
-        }
-    }
-    public static List<String> extractHyperlinks(String url) {
-        ChromeDriver driver = getModifiedChromeDriver();
-        driver.get(url);
-        List<String> allUrls = new ArrayList<>();
-        extractAllHyperLinks(driver, allUrls);
-        List<WebElement> iframes = driver.findElements(By.tagName("iframe"));
-        for (WebElement iframe : iframes) {
-            driver.switchTo().frame(iframe);
-            extractAllHyperLinks(driver, allUrls);
-            driver.switchTo().defaultContent();
-        }
-        driver.quit();
-        return allUrls;
-    }
-    private static void extractAllHyperLinks(WebDriver driver, List<String> allLinks) {
-        List<WebElement> links = driver.findElements(By.tagName("a"));
-        for (WebElement link : links) {
-            String href = link.getAttribute("href");
-            if (href != null && !allLinks.contains(href)) {
-                allLinks.add(href);
-            }
-        }
-    }
 
-    public static List<String> getSuspectedDownloadLinks(List<String> allLinks,String mainDomain){
-        allLinks.removeIf(link -> !isSuspectedDownloadLink(link, mainDomain));
-        return allLinks;
-    }
-    private static boolean isSuspectedDownloadLink(String link,String mainDomain) {
-        if(!link.contains(mainDomain) || link.length()>200){
-            System.out.println(link+" not download file!");
-            return false;
-        }
-        // Check if the link contains non-download keywords
-        String[] nonDownloadKeywords = new String[]{"read", "view", "login", "sign in", "about", "contact", "learn more", "get started", "subscribe"};
-        String lowerCaseLink = link.toLowerCase();
-        for (String keyword : nonDownloadKeywords) {
-            if (lowerCaseLink.contains(keyword)) {
-                System.out.println(link+" not download file!");
-                return false;
-            }
-        }
 
-        // Check additional URL structure
-        if (lowerCaseLink.matches(".*/article/.*|.*\\?id=.*|.*\\?article=.*|.*\\?post=.*") || lowerCaseLink.endsWith(".html") || lowerCaseLink.endsWith(".php") || lowerCaseLink.endsWith(".asp")) {
-            System.out.println(link+" not download file!");
-            return false;
-        }
 
-        // Check based on file extensions
 
-        return true; // Default to false if no other criteria are met
-    }
-    private static ChromeDriver getModifiedChromeDriver() {
-        System.setProperty("webdriver.openqa.driver", "path/to/chromedriver.exe");
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless");
-        options.addArguments("--disable-gpu");
-        options.addArguments("--disable-notifications");
-        options.addArguments("--enable-automation");
-        options.addArguments("user-agent=" + Utility.getRandomUserAgent());
-        return new ChromeDriver(options);
-    }
 
-    //pdf, doc, docx, xls, xlsx, ppt, pptx, mp3, mp4;
 
 
 
