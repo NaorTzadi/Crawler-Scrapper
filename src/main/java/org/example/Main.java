@@ -7,28 +7,16 @@ public class Main {
     private final static ArrayList<WebCrawlerDataBase> webCrawlerDataBase=new ArrayList<>();
     private final static ArrayList<WebScrapperDataBase> webScrapperDataBase=new ArrayList<>();
     public static void main(String[] args) {
-        String urlToTest="https://www.dwsamplefiles.com/download-doc-sample-files/";
+        String urlToTest="https://www.sciencedirect.com/science/article/pii/S2090123219301079";
 
-        System.out.println(FileLinksExtractor.FileLinksExtractor(Utility.getMainDomainUrl(urlToTest),SeleniumScrapper.extractHyperlinks(urlToTest)));
+        //for (String link:FileLinksExtractor.extractHyperLinks("https://scholar.archive.org/")){System.out.println(link);}
 
-        List<String> links1=SeleniumScrapper.getSuspectedDownloadLinks(SeleniumScrapper.extractHyperlinks(urlToTest),Utility.getMainDomainUrl(urlToTest));
-        for(String link:links1){
-            System.out.println(link);
-        }
-        System.out.println(links1.size());
+        //System.out.println(FileLinksExtractor.isDownloadLink("https://web.archive.org/web/20200328205104/http://europepmc.org/backend/ptpmcrender.fcgi?accid=PMC5180799&blobtype=pdf",Utility.getModifiedChromeDriver()));
 
-        List<String> links2=SeleniumScrapper.extractHyperlinks(urlToTest);
-        for(String link:links2){
-            System.out.println(link);
-        }
-        System.out.println(links2.size());
+        //System.out.println(FileLinksExtractor.FileLinksExtractor(Utility.getMainDomainUrl(urlToTest),SeleniumScrapper.extractHyperLinks(urlToTest)));
+        //for (String link:FileLinksExtractor.getSuspectedDownloadLinks(Utility.getMainDomainUrl(urlToTest),SeleniumScrapper.extractHyperLinks(urlToTest))){System.out.println(link);}
 
-           /*List<String> links=SeleniumScrapper.extractHyperlinks("https://www.sciencedirect.com/science/article/pii/S2090123219301079");
-        for(String link:links){
-            if (link.endsWith("pdf")){
-                System.out.println(link+": pdf link");
-            }
-        }*/
+        for(String link:FileLinksExtractor.getPdfUrls("https://scholar.archive.org/")){System.out.println(link);}
 
         //for(String url:Utility.getUrlsToTest()){System.out.println( WebScrapper.getContentType(url));}
         //for(String url:Utility.getUrlsToTest()){System.out.println(Utility.isAccessAllowed(url));}
@@ -60,7 +48,6 @@ public class Main {
         }
         mainMenu();
     }
-
     private static void webCrawlerOptionsMenu(){
         final String option1="1"; final String option2="2";final String option3="3";final  String option4="4";
         final String goBackOption="0";
@@ -189,12 +176,8 @@ public class Main {
             }
         }
     }
-    private static boolean doesExistsInScrapperDataBase(String url){
-        return webScrapperDataBase.stream().anyMatch(dataBase -> dataBase.getUrl().equals(url));
-    }
-    private static boolean doesExistsInCrawlerDataBase(String url){
-        return webCrawlerDataBase.stream().anyMatch(dataBase -> dataBase.getUrl().equals(url));
-    }
+    private static boolean doesExistsInScrapperDataBase(String url){return webScrapperDataBase.stream().anyMatch(dataBase -> dataBase.getUrl().equals(url));}
+    private static boolean doesExistsInCrawlerDataBase(String url){return webCrawlerDataBase.stream().anyMatch(dataBase -> dataBase.getUrl().equals(url));}
     private static void eraseWebScrapperDataBase(){webScrapperDataBase.clear();}
     private static void eraseWebCrawlerDataBase(){webCrawlerDataBase.clear();}
 
