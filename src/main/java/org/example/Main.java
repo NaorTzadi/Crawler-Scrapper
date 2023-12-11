@@ -1,4 +1,5 @@
 package org.example;
+import org.openqa.selenium.chrome.ChromeDriver;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,20 +9,21 @@ public class Main {
     private final static ArrayList<WebScrapperDataBase> webScrapperDataBase=new ArrayList<>();
     public static void main(String[] args) {
         String urlToTest="https://www.sciencedirect.com/science/article/pii/S2090123219301079";
+        ChromeDriver chromeDriver=Utility.getModifiedChromeDriver();
 
-        //for (String link:FileLinksExtractor.extractHyperLinks("https://scholar.archive.org/")){System.out.println(link);}
+        //System.out.println(FileLinksExtractor.getAllFileLinks("https://scholar.archive.org/"));
+        //for (String link:FileLinksExtractor.extractHyperLinks(chromeDriver)){System.out.println(link);}
 
-        //System.out.println(FileLinksExtractor.isDownloadLink("https://web.archive.org/web/20200328205104/http://europepmc.org/backend/ptpmcrender.fcgi?accid=PMC5180799&blobtype=pdf",Utility.getModifiedChromeDriver()));
+        //System.out.println(FileLinksExtractor.isDownloadLink("https://web.archive.org/web/20171006225602/https://burnstrauma.biomedcentral.com/track/pdf/10.1186/s41038-017-0090-z?site=burnstrauma.biomedcentral.com",chromeDriver));
 
-        //System.out.println(FileLinksExtractor.FileLinksExtractor(Utility.getMainDomainUrl(urlToTest),SeleniumScrapper.extractHyperLinks(urlToTest)));
-        //for (String link:FileLinksExtractor.getSuspectedDownloadLinks(Utility.getMainDomainUrl(urlToTest),SeleniumScrapper.extractHyperLinks(urlToTest))){System.out.println(link);}
+        //System.out.println(FileLinksExtractor.isDownloadLink("https://www.dwsamplefiles.com/download-ods-sample-files/",chromeDriver));
+        for (String link:FileLinksExtractor.getAllDownloadLinks("https://www.dwsamplefiles.com/download-doc-sample-files/")){System.out.println(link);}
 
-        for(String link:FileLinksExtractor.getPdfUrls("https://scholar.archive.org/")){System.out.println(link);}
-
-        //for(String url:Utility.getUrlsToTest()){System.out.println( WebScrapper.getContentType(url));}
-        //for(String url:Utility.getUrlsToTest()){System.out.println(Utility.isAccessAllowed(url));}
         Utility.isConnected();
         mainMenu();
+
+        //for(String url:Utility.getUrlsToTest()){System.out.println( WebScrapper.getContentType(url));} //עובד
+        //for(String url:Utility.getUrlsToTest()){System.out.println(Utility.isAccessAllowed(url));}//עובד
     }
 
 
