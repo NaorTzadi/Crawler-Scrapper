@@ -1,4 +1,6 @@
 package org.example;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -134,12 +136,23 @@ public class Utility {
             return null;
         }
     }
+    public static ChromeDriver getModifiedChromeDriver() {
+        System.setProperty("webdriver.openqa.driver", "path/to/chromedriver.exe");
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless");
+        options.addArguments("--disable-gpu");
+        options.addArguments("--disable-notifications");
+        options.addArguments("--enable-automation");
+        options.addArguments("user-agent=" + Utility.getRandomUserAgent());
+        return new ChromeDriver(options);
+    }
     public static boolean isMainPageUrl(String url) {try {return !new URL(url).getPath().matches(".*/[^/]+/[^/]+.*");} catch (Exception e) {return false;}}
 
     public static ArrayList<String> getUrlsToTest(){ // רק לצורך בדיקות
         ArrayList<String> urlsToTest=new ArrayList<>();
         urlsToTest.add("https://www.pexels.com/");
         urlsToTest.add("https://books.toscrape.com/");
+        urlsToTest.add("https://scholar.archive.org/");
         urlsToTest.add("https://store.steampowered.com/app/1172470/Apex_Legends/");
         urlsToTest.add("https://www.dwsamplefiles.com/download-doc-sample-files/");
         urlsToTest.add("https://www.sciencedirect.com/science/article/pii/S2090123219301079");
