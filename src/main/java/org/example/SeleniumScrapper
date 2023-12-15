@@ -3,32 +3,33 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 public class SeleniumScrapper extends WebScrapper {
     public static WebScrapperDataBase getAllScrapedInfo(String url){
-        WebScrapperDataBase webScrapperData=new WebScrapperDataBase(url,getContentType(url),getImageUrls(url),getVideoUrls(url));
-
-        System.out.println(webScrapperData);
-        System.out.println();
-        return webScrapperData;
+        return new WebScrapperDataBase(url,getContentType(url),getImageUrls(url),getVideoUrls(url),null);
     }
-    public static int getKeyWordAmountOfOccurrences(String url) {
-        Scanner scanner=new Scanner(System.in);
-        System.out.println("choose a key word to search for:");
-        String keyword=scanner.nextLine();
-        if(keyword.equals("0")){return -1;}
+    public static HashMap<String, Integer> getKeyWordAmountOfOccurrences(String url, HashMap<String, Integer> wordAppearanceCount) {
         ChromeDriver chromeDriver = Utility.getModifiedChromeDriver();
         chromeDriver.get(url);
-        String pageText = chromeDriver.findElement(By.tagName("body")).getText();
+        String pageText = chromeDriver.findElement(By.tagName("body")).getText().toLowerCase();
         chromeDriver.quit();
-        if (pageText.contains(keyword)){
-            int count=countOccurrences(pageText.toLowerCase(), keyword.toLowerCase());
-            System.out.println("the key word "+keyword+" was found "+count+" times.");
-            return count;
+
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.println("Choose a keyword to search for (press 0 to go back):");
+            String keyword = scanner.nextLine().toLowerCase().trim();
+            if (keyword.equals("0")) break;
+            int count = countOccurrences(pageText, keyword);
+            if (count > 0) {
+                System.out.println("The keyword '" + keyword + "' was found " + count + " times.");
+                wordAppearanceCount.put(keyword, count);
+            } else {
+                System.out.println("The keyword '" + keyword + "' was not found!");
+            }
         }
-        System.out.println("the key word "+keyword+" was not found!");
-        return 0;
+        return wordAppearanceCount;
     }
     public static ArrayList<String> getImageUrls(String url) {
         ChromeDriver chromeDriver = Utility.getModifiedChromeDriver();
