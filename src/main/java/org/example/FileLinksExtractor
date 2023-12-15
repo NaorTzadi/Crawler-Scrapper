@@ -12,9 +12,8 @@ public class FileLinksExtractor {
     // צריך למצוא עוד דרכים לצמצום כמות הלינקים החשודים
     // צריך לנסות להפחית מהמשקל של הפונקציה isDownloadLink
     // יכול להיות שצריך להשתמש בסלניום ב-isDownloadLink כדי להוריד מהחשד של אתרים
-    //pdf, doc, docx, xls, xlsx, ppt, pptx, mp3, mp4;
-    static String[] downloadExtensions = new String[]{".pdf", ".doc", ".docx", ".xls", ".xlsx", ".zip", ".rar"};
-
+    // בסיום לזכור להעביר ל- private מה שצריך
+    static String[] downloadExtensions = new String[]{".pdf", ".doc", ".docx", ".xls", ".xlsx", ".zip", ".rar",".pptx",".mp3",".mp4"};
     public static boolean isDownloadLink(String link, WebDriver driver) {
         try {
             driver.get(link);
@@ -94,7 +93,7 @@ public class FileLinksExtractor {
                 !link.contains("#");
     }
     public static boolean isDownloadLink(String link) {
-        return link.matches(".*\\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar|7z)$") ||
+        return link.matches(".*\\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar|7z|mp3|mp4)$") ||
                 link.contains("file=") || link.contains("/file/") ||
                 link.contains("dl_id=") || link.contains("blobtype=pdf") ||
                 link.contains("filename=") || link.contains("file_id=") ||
@@ -119,7 +118,7 @@ public class FileLinksExtractor {
             try {
                 WebElement link = links.get(i);
                 String href = link.getAttribute("href");
-                if (href != null && !allLinks.contains(href)) {
+                if (href != null) {
                     allLinks.add(href);
                 }
             } catch (StaleElementReferenceException e) {
@@ -127,8 +126,14 @@ public class FileLinksExtractor {
                 i--;
             }
         }
+        List<WebElement> buttons = driver.findElements(By.cssSelector("[data-jam-url]"));
+        for (WebElement button : buttons) {
+            String dataUrl = button.getAttribute("data-jam-url");
+            if (dataUrl != null && !allLinks.contains(dataUrl)) {
+                allLinks.add(dataUrl);
+            }
+        }
     }
-
 
  /*   public static void extractEmbeddedPdfLinks(WebDriver driver, List<String> pdfLinks) {
         List<WebElement> pdfViewerElements = driver.findElements(By.xpath("//embed[@type='application/pdf']"));
