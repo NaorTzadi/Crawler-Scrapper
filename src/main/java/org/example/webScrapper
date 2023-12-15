@@ -2,41 +2,47 @@ package org.example;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 public class WebScrapper {
     private static final String getAllScrapedInfo="1";
     private static final String getKeyWordAmountOfOccurrences="2";
     private static final String getImageUrls="3";
     private static final String getVideoUrls="4";
-    public static Object webScrapperOperator(String url,String option){
+    public static WebScrapperDataBase webScrapperOperator(String option,WebScrapperDataBase data){
         Utility.isConnected();
-        if (Utility.isAccessAllowed(url)){
+        if (Utility.isAccessAllowed(data.getUrl())){
             if (option.equals(getAllScrapedInfo)){
-                return JsoupScrapper.getAllScrapedInfo(url);
+                return JsoupScrapper.getAllScrapedInfo(data.getUrl());
             }else if (option.equals(getKeyWordAmountOfOccurrences)){
-                return JsoupScrapper.getKeyWordAmountOfOccurrences(url);
-            } else if (option.equals(getImageUrls)) {
-                return JsoupScrapper.getImageUrls(url);
-            } else if (option.equals(getVideoUrls)) {
-                return JsoupScrapper.getVideoUrls(url);
+                if (data.getCountedWordsAppearance()==null){
+                    data.setCountedWordsAppearance(JsoupScrapper.getKeyWordAmountOfOccurrences(data.getUrl(),new HashMap<>()));
+                }else {
+                    data.setCountedWordsAppearance(JsoupScrapper.getKeyWordAmountOfOccurrences(data.getUrl(),data.getCountedWordsAppearance()));
+                }
+            } else if (option.equals(getImageUrls)&& data.getImageLinks()==null) {
+                data.setImageLinks(JsoupScrapper.getImageUrls(data.getUrl()));
+            } else if (option.equals(getVideoUrls)&& data.getVideoLinks()==null) {
+                data.setVideoLinks(JsoupScrapper.getVideoUrls(data.getUrl()));
             }
         }else {
             if (option.equals(getAllScrapedInfo)){
-                return SeleniumScrapper.getAllScrapedInfo(url);
+                return SeleniumScrapper.getAllScrapedInfo(data.getUrl());
             }else if (option.equals(getKeyWordAmountOfOccurrences)){
-                return SeleniumScrapper.getKeyWordAmountOfOccurrences(url);
-            } else if (option.equals(getImageUrls)) {
-                return SeleniumScrapper.getImageUrls(url);
-            } else if (option.equals(getVideoUrls)) {
-                return SeleniumScrapper.getVideoUrls(url);
+                if (data.getCountedWordsAppearance()==null){
+                    data.setCountedWordsAppearance(SeleniumScrapper.getKeyWordAmountOfOccurrences(data.getUrl(),new HashMap<>()));
+                }else {
+                    data.setCountedWordsAppearance(SeleniumScrapper.getKeyWordAmountOfOccurrences(data.getUrl(),data.getCountedWordsAppearance()));
+                }
+            } else if (option.equals(getImageUrls) && data.getImageLinks()==null) {
+                data.setImageLinks(SeleniumScrapper.getImageUrls(data.getUrl()));
+            } else if (option.equals(getVideoUrls) && data.getVideoLinks()==null) {
+                data.setVideoLinks(SeleniumScrapper.getVideoUrls(data.getUrl()));
             }
         }
-        return null;
+        return data;
     }
-    public static int countOccurrences(String text, String keyWord) { // WebScrapperUtility
+    public static int countOccurrences(String text, String keyWord) {
         String[] words = text.split("\\s+");
         int count = 0;
         for (String word : words) {
@@ -67,42 +73,6 @@ public class WebScrapper {
             }
         }
     }
-
-/*    public static boolean doesContainJavaScriptFiles(String url) {
-        try {
-            Document doc = Jsoup.connect(url).get();
-            Elements scriptElements = doc.select("script[src]");
-
-            for (Element script : scriptElements) {
-                String src = script.attr("src");
-                if (src.endsWith(".js") || src.endsWith(".mjs")) {
-                    //System.out.println("JavaScript file found: " + src);
-                    return true;
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-    public static boolean doesContainJavascriptPdfFiles(String url) {
-        try {
-            Document doc = Jsoup.connect(url).get();
-            Elements pdfElements = doc.select("a[href$='.pdf']");
-
-            for (Element pdfLink : pdfElements) {
-                String href = pdfLink.attr("href");
-                if (href != null && !href.isEmpty()) {
-                    return true;
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }*/
-
-
     public static ArrayList<String> getSupportedMethods(String urlStr) {
         HttpURLConnection connection = null;
         ArrayList<String> supportedMethods = new ArrayList<>();
@@ -133,8 +103,6 @@ public class WebScrapper {
         if(supportedMethods.isEmpty()){System.out.println("No Allow header present for " + urlStr);}
         return supportedMethods;
     }
-
-
     public static String measureResponseTime(String urlStr, String requestType) {
         HttpURLConnection connection = null;
         long startTime, endTime, responseTime;
@@ -173,5 +141,39 @@ public class WebScrapper {
             }
         }
     }
+    /*    public static boolean doesContainJavaScriptFiles(String url) {
+        try {
+            Document doc = Jsoup.connect(url).get();
+            Elements scriptElements = doc.select("script[src]");
+
+            for (Element script : scriptElements) {
+                String src = script.attr("src");
+                if (src.endsWith(".js") || src.endsWith(".mjs")) {
+                    //System.out.println("JavaScript file found: " + src);
+                    return true;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    public static boolean doesContainJavascriptPdfFiles(String url) {
+        try {
+            Document doc = Jsoup.connect(url).get();
+            Elements pdfElements = doc.select("a[href$='.pdf']");
+
+            for (Element pdfLink : pdfElements) {
+                String href = pdfLink.attr("href");
+                if (href != null && !href.isEmpty()) {
+                    return true;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }*/
+
 
 }
