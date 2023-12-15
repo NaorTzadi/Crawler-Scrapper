@@ -5,39 +5,36 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 public class JsoupScrapper extends WebScrapper {
     public static WebScrapperDataBase getAllScrapedInfo(String url){
-        WebScrapperDataBase webScrapperData=new WebScrapperDataBase(url,getContentType(url),getImageUrls(url),getVideoUrls(url));
-
-        System.out.println(webScrapperData);
-        System.out.println();
-        return webScrapperData;
+        return new WebScrapperDataBase(url,getContentType(url),getImageUrls(url),getVideoUrls(url),null);
     }
 
-    public static int getKeyWordAmountOfOccurrences(String url) {
-        Scanner scanner=new Scanner(System.in);
-        System.out.println("choose a key word to search for:");
-        String keyword=scanner.nextLine();
-        if(keyword.equals("0")){return -1;}
+    public static HashMap<String, Integer> getKeyWordAmountOfOccurrences(String url, HashMap<String, Integer> wordAppearanceCount) {
         try {
             Document doc = Jsoup.connect(url).userAgent(Utility.getRandomUserAgent()).execute().parse();
-            String fullText = doc.text();
-            String titleText = doc.title();
-            String textWithoutTitle = fullText.replace(titleText, "");
-
-            if (textWithoutTitle.contains(keyword)) {
-                int count=countOccurrences(textWithoutTitle.toLowerCase(), keyword.toLowerCase());
-                System.out.println("the key word "+keyword+" was found "+count+" times.");
-                return count;
-            }else {
-                System.out.println("the key word "+keyword+" was not found!");
+            String text = doc.text().toLowerCase().replace(doc.title().toLowerCase(), "");
+            Scanner scanner = new Scanner(System.in);
+            while (true) {
+                System.out.println("Choose a keyword to search for (or press 0 to go back):");
+                String keyword = scanner.nextLine().toLowerCase().trim();
+                if (keyword.equals("0")) break;
+                int count = countOccurrences(text, keyword);
+                if (count > 0) {
+                    System.out.println("The keyword '" + keyword + "' was found " + count + " times.");
+                    wordAppearanceCount.put(keyword, count);
+                } else {
+                    System.out.println("The keyword '" + keyword + "' was not found!");
+                }
             }
         } catch (IOException e) {
             System.err.println("Error fetching URL: " + e.getMessage());
         }
-        return 0;
+        return wordAppearanceCount;
     }
+
     public static ArrayList<String> getImageUrls(String url) {
         ArrayList<String> imageLinks = new ArrayList<>();
         try {
@@ -47,7 +44,6 @@ public class JsoupScrapper extends WebScrapper {
                 String imgSrc = img.attr("abs:src"); // Extract absolute URL of the image
                 if (!imgSrc.isEmpty()) {
                     imageLinks.add(imgSrc);
-                    //System.out.print(" " + imgSrc + ",");
                 }
             }
         } catch (Exception e) {
@@ -55,7 +51,6 @@ public class JsoupScrapper extends WebScrapper {
         }
         return imageLinks;
     }
-
     public static ArrayList<String> getVideoUrls(String url) {
         ArrayList<String> videoUrls = new ArrayList<>();
         try {
@@ -65,7 +60,6 @@ public class JsoupScrapper extends WebScrapper {
             for (Element video : videoElements) {
                 String videoSrc = video.attr("src");
                 if (!videoSrc.isEmpty()) {
-                    //System.out.println("Found video URL: " + videoSrc);
                     videoUrls.add(videoSrc);
                     videosFound = true;
                 }
@@ -73,13 +67,21 @@ public class JsoupScrapper extends WebScrapper {
                 for (Element source : sourceElements) {
                     String sourceSrc = source.attr("src");
                     if (!sourceSrc.isEmpty()) {
-                        //System.out.println("Found video source URL: " + sourceSrc);
                         videoUrls.add(sourceSrc);
                         videosFound = true;
                     }
                 }
             }
-            if (!videosFound) {System.out.println("No videos found on the webpage.");}
+            if (!videosFound) {
+                System.out.println("no videos found.");
+                System.out.println("would you would you like me try using selenium?");
+                System.out.println("press 1 for YES");
+                System.out.println("press anything else for NO");
+                Scanner scanner=new Scanner(System.in);
+                if (scanner.nextLine().equals("1")){
+                    videoUrls=SeleniumScrapper.getVideoUrls(url);
+                }
+            }
         } catch (IOException e) {System.err.println("Error fetching page: " + e.getMessage());}
         return videoUrls;
     }
