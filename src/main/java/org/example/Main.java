@@ -1,23 +1,25 @@
 package org.example;
-import org.openqa.selenium.chrome.ChromeDriver;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Scanner;
 public class Main {
     private final static ArrayList<WebCrawlerDataBase> webCrawlerDataBase=new ArrayList<>();
     private final static ArrayList<WebScrapperDataBase> webScrapperDataBase=new ArrayList<>();
     public static void main(String[] args) {
-        String urlToTest="https://www.sciencedirect.com/science/article/pii/S2090123219301079";
-        ChromeDriver chromeDriver=Utility.getModifiedChromeDriver();
+        //ChromeDriver chromeDriver=Utility.getModifiedChromeDriver();
 
+        HashMap<String,Integer> test=SeleniumScrapper.getKeyWordAmountOfOccurrences("https://books.toscrape.com/",new HashMap<>());
+        for (HashMap.Entry<String, Integer> entry : test.entrySet()){
+            String key = entry.getKey();
+            int value = entry.getValue();
+            System.out.println("string=" + key + " integer=" + value);
+        }
         //System.out.println(FileLinksExtractor.getAllFileLinks("https://scholar.archive.org/"));
         //for (String link:FileLinksExtractor.extractHyperLinks(chromeDriver)){System.out.println(link);}
 
-        //System.out.println(FileLinksExtractor.isDownloadLink("https://web.archive.org/web/20171006225602/https://burnstrauma.biomedcentral.com/track/pdf/10.1186/s41038-017-0090-z?site=burnstrauma.biomedcentral.com",chromeDriver));
+        //System.out.println(FileLinksExtractor.isDownloadLink("https://ssj.mp3juice.blog/dl/DCtouot15cA",chromeDriver));
 
-        //System.out.println(FileLinksExtractor.isDownloadLink("https://www.dwsamplefiles.com/download-ods-sample-files/",chromeDriver));
-        for (String link:FileLinksExtractor.getAllDownloadLinks("https://www.dwsamplefiles.com/download-doc-sample-files/")){System.out.println(link);}
+        //for (String link:FileLinksExtractor.getAllDownloadLinks("https://licensing.jamendo.com/en/track/2126785/infinite-inspiration-uplifting-upbeat-corporate-inspiring-motivational")){System.out.println(link);}
 
         Utility.isConnected();
         mainMenu();
@@ -25,8 +27,6 @@ public class Main {
         //for(String url:Utility.getUrlsToTest()){System.out.println( WebScrapper.getContentType(url));} //עובד
         //for(String url:Utility.getUrlsToTest()){System.out.println(Utility.isAccessAllowed(url));}//עובד
     }
-
-
     private static void mainMenu(){
         final String option1="1"; final String option2="2";final String option3="3";
         Scanner scanner=new Scanner(System.in);
@@ -103,18 +103,11 @@ public class Main {
             decision=scanner.nextLine();
             if(decision.equals(goBackOption)){mainMenu();}
             counter++;
-        }while (!decision.equals(option1) && !decision.equals(option2) && !decision.equals(option3)&&!decision.equals(option4)&&!decision.equals(option5)&&!decision.equals(option6)&&!decision.equals(option7));
-        String url=Utility.promptUrl();
-        if (url.equals("0")){webScrapperOptionsMenu();return;}
-        //if(Integer.parseInt(decision)>=2 && Integer.parseInt(decision)<=4){WebScrapper.webScrapperOperator(url,decision);}
-        if(decision.equals(option1)){
-            hasScrapped(url);webScrapperDataBase.add((WebScrapperDataBase) WebScrapper.webScrapperOperator(url,option1));
-        }else if (decision.equals(option2)){
-            WebScrapper.webScrapperOperator(url,option2);
-        }else if (decision.equals(option3)){
-            WebScrapper.webScrapperOperator(url,option3);
-        }else if (decision.equals(option4)){
-            WebScrapper.webScrapperOperator(url,option4);
+        }while (!decision.matches("\\d+") || Integer.parseInt(decision) > 7 || Integer.parseInt(decision) < 0);
+        if(Integer.parseInt(decision)>0 && Integer.parseInt(decision)<5){
+            String url=Utility.promptUrl();
+            if (url.equals("0")){webScrapperOptionsMenu();return;}
+          processPhase(url,decision);
         }else if (decision.equals(option5)){
             getWebScrapperHistoryMenu();
         }else if (decision.equals(option6)){
@@ -124,7 +117,16 @@ public class Main {
         }
         System.out.println();webScrapperOptionsMenu();
     }
-
+    private static void processPhase(String url, String decision){
+        for (WebScrapperDataBase data:webScrapperDataBase){
+            if (data.getUrl().equals(url)){
+                webScrapperDataBase.add(WebScrapper.webScrapperOperator(decision,data));
+                webScrapperDataBase.remove(data);
+                return;
+            }
+        }
+        webScrapperDataBase.add(WebScrapper.webScrapperOperator(decision,new WebScrapperDataBase(url,WebScrapper.getContentType(url),null,null,null)));
+    }
     private static void eraseWebScrapperData(){
         if(webScrapperDataBase.isEmpty()){System.out.println("nothing to erase because the data base is empty!");return;}
         Scanner scanner=new Scanner(System.in);
@@ -183,16 +185,6 @@ public class Main {
     private static void eraseWebScrapperDataBase(){webScrapperDataBase.clear();}
     private static void eraseWebCrawlerDataBase(){webCrawlerDataBase.clear();}
 
-    private static void hasScrapped(String url){
-        for(WebScrapperDataBase data:webScrapperDataBase){
-            if(url.equals(data.getUrl())){
-                System.out.println("url already exists in history:");
-                System.out.println(data);
-                System.out.println();
-                webScrapperOptionsMenu();
-            }
-        }
-    }
     private static void insertUrlToAnalyze(){
         Scanner scanner=new Scanner(System.in);
         System.out.println("insert a url to start:");
@@ -229,6 +221,9 @@ public class Main {
         System.out.println();webCrawlerOptionsMenu();
     }
     private static void getWebScrapperHistoryMenu(){
+        if (webScrapperDataBase.isEmpty()){
+            System.out.println("not data yet...");System.out.println();webScrapperOptionsMenu();return;
+        }
         Scanner scanner=new Scanner(System.in);
         int counter=1;
         HashMap<Integer,String> linksMenu=new HashMap<>();
@@ -250,7 +245,7 @@ public class Main {
         if(decision.matches("^[0-9]+$")){
             int decisionToInt=Integer.parseInt(decision);
             if(decisionToInt==0){
-                mainMenu();}
+                webScrapperOptionsMenu();}
             if(decisionToInt<counter ||decisionToInt>1){
                 for(WebScrapperDataBase data:webScrapperDataBase){
                     if(data.getUrl().equals(linksMenu.get(decisionToInt))){
