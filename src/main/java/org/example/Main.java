@@ -1,4 +1,7 @@
 package org.example;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -6,23 +9,29 @@ public class Main {
     private final static ArrayList<WebCrawlerDataBase> webCrawlerDataBase=new ArrayList<>();
     private final static ArrayList<WebScrapperDataBase> webScrapperDataBase=new ArrayList<>();
     public static void main(String[] args) {
-        //ChromeDriver chromeDriver=Utility.getModifiedChromeDriver();
+        //new MouseTracker();Scanner scanner=new Scanner(System.in);scanner.nextLine();
+        MouseMovementPaths.fillMovementPaths();
 
-        HashMap<String,Integer> test=SeleniumScrapper.getKeyWordAmountOfOccurrences("https://books.toscrape.com/",new HashMap<>());
-        for (HashMap.Entry<String, Integer> entry : test.entrySet()){
-            String key = entry.getKey();
-            int value = entry.getValue();
-            System.out.println("string=" + key + " integer=" + value);
+        ChromeDriver chromeDriver=Utility.getModifiedChromeDriver();
+        chromeDriver.get("https://books.toscrape.com/");
+        try {
+            WebElement element=chromeDriver.findElement(By.xpath("//*[@id=\"default\"]/div/div/div/div/section/div[2]/ol/li[1]/article/div[1]/a/img"));
+            MouseController mouseController=new MouseController(chromeDriver,element);
+            mouseController.moveToElement();
+        }catch (Exception e){
+            e.printStackTrace();
         }
+
+        Utility.isConnected();
+        MouseMovementPaths.fillMovementPaths();
+        mainMenu();
+
         //System.out.println(FileLinksExtractor.getAllFileLinks("https://scholar.archive.org/"));
         //for (String link:FileLinksExtractor.extractHyperLinks(chromeDriver)){System.out.println(link);}
 
         //System.out.println(FileLinksExtractor.isDownloadLink("https://ssj.mp3juice.blog/dl/DCtouot15cA",chromeDriver));
 
         //for (String link:FileLinksExtractor.getAllDownloadLinks("https://licensing.jamendo.com/en/track/2126785/infinite-inspiration-uplifting-upbeat-corporate-inspiring-motivational")){System.out.println(link);}
-
-        Utility.isConnected();
-        mainMenu();
 
         //for(String url:Utility.getUrlsToTest()){System.out.println( WebScrapper.getContentType(url));} //עובד
         //for(String url:Utility.getUrlsToTest()){System.out.println(Utility.isAccessAllowed(url));}//עובד
