@@ -105,6 +105,28 @@ public class MouseController {
         }
     }
 
+    private Point getFalseDestination(){
+        String mouseLocationFromTheElementInSimpleTerms=getMouseLocationFromElementLocationInSimpleTerms();
+        if (mouseLocationFromTheElementInSimpleTerms.contains("up")&&mouseLocationFromTheElementInSimpleTerms.contains("left")){
+            return new Point(random.nextInt(Math.abs(element.getLocation().x+100)),random.nextInt(Math.abs(element.getLocation().x+100)));
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains("up")&&mouseLocationFromTheElementInSimpleTerms.contains("right")){
+            return new Point(random.nextInt(Math.abs(element.getLocation().x+100)),random.nextInt(Math.abs(element.getLocation().x-100)));
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains("down")&&mouseLocationFromTheElementInSimpleTerms.contains("left")){
+            return new Point(random.nextInt(Math.abs(element.getLocation().x-100)),random.nextInt(Math.abs(element.getLocation().x+100)));
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains("down")&&mouseLocationFromTheElementInSimpleTerms.contains("right")){
+            return new Point(random.nextInt(Math.abs(element.getLocation().x-100)),random.nextInt(Math.abs(element.getLocation().x-100)));
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains("inline")&&mouseLocationFromTheElementInSimpleTerms.contains("left")){
+            
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains("inline")&&mouseLocationFromTheElementInSimpleTerms.contains("right")){
+
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains("up")&&mouseLocationFromTheElementInSimpleTerms.contains("inline")){
+
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains("down")&&mouseLocationFromTheElementInSimpleTerms.contains("inline")){
+
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains("inline")&&mouseLocationFromTheElementInSimpleTerms.contains("inline")){
+
+        }
+    }
     private int getRandomPause(){
         int pauseLevel=random.nextInt(3);
         if (pauseLevel==0){
