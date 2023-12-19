@@ -1,0 +1,403 @@
+package org.example;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class MouseMovementPaths {
+    private static final ArrayList<String> unrefinedMovementPaths =new ArrayList<>();
+    private static final List<List<Point>> refinedMovementPaths = new ArrayList<>();
+    private static final List<String> unrefinedPathsFormulas =new ArrayList<>();
+    private static final List<List<Point>> pathsFormulasRightToTheElement =new ArrayList<>();
+    private static final List<List<Point>> pathsFormulasLeftToTheElement =new ArrayList<>();
+    public static List<List<Point>> getPathsFormulasRightToTheElement(){return pathsFormulasRightToTheElement;}
+    public static List<List<Point>> getPathsFormulasLeftToTheElement(){return pathsFormulasLeftToTheElement;}
+    public static void fillMovementPaths(){
+        fillUnrefinedPathFormulas();
+        fillPathFormulas();
+    }
+    private static void fillPathFormulas() {
+        for (String formula : unrefinedPathsFormulas) {
+            String[] lines = formula.split("\n");
+            List<Point> pathFormula = new ArrayList<>();
+            List<Point> mirroredPathFormula = new ArrayList<>();
+
+            for (String line : lines) {
+                String[] parts = line.split(",");
+                int x = Integer.parseInt(parts[0].trim());
+                int y = Integer.parseInt(parts[1].trim());
+
+                Point originalPoint = new Point(x, y);
+                Point mirroredPoint = new Point(-x, y); // Mirror along the X-axis
+
+                pathFormula.add(originalPoint);
+                mirroredPathFormula.add(mirroredPoint);
+            }
+            pathsFormulasRightToTheElement.add(pathFormula);
+            pathsFormulasLeftToTheElement.add(mirroredPathFormula);
+        }
+    }
+    private static void processMovementPaths() {
+        for (String movementPath : unrefinedMovementPaths) {
+            String[] lines = movementPath.split("\n");
+            List<Point> refinedPath = new ArrayList<>();
+            List<Point> pathDelta = new ArrayList<>();
+
+            for (int i = 0; i < lines.length; i++) {
+                String[] parts = lines[i].split(", Y: ");
+                int x = Integer.parseInt(parts[0].split(": ")[1].trim());
+                int y = Integer.parseInt(parts[1].trim());
+                refinedPath.add(new Point(x, y));
+
+                if (i > 0) {
+                    Point previousPoint = refinedPath.get(i - 1);
+                    int xDifference = x - previousPoint.x;
+                    int yDifference = y - previousPoint.y;
+                    System.out.println(xDifference+","+yDifference);
+                    pathDelta.add(new Point(xDifference, yDifference));
+                }
+            }
+            pathsFormulasRightToTheElement.add(pathDelta);
+        }
+    }
+
+    private static void fillPathsPoints() {
+        for (List<Point> path : refinedMovementPaths) {
+            List<Point> pathFormula = new ArrayList<>();
+            for (int i = 0; i < path.size() - 1; i++) {
+                Point currentPoint = path.get(i);
+                Point nextPoint = path.get(i + 1);
+                int xDifference = nextPoint.x - currentPoint.x;
+                int yDifference = nextPoint.y - currentPoint.y;
+                pathFormula.add(new Point(xDifference, yDifference));
+            }
+            pathsFormulasRightToTheElement.add(pathFormula);
+        }
+    }
+    private static void fillRefinedMovementPaths() {
+        for (String movementPath : unrefinedMovementPaths) {
+            String[] lines = movementPath.split("\n");
+            List<Point> refinedPath = new ArrayList<>();
+            for (String line : lines) {
+                String[] parts = line.split(", Y: ");
+                int x = Integer.parseInt(parts[0].split(": ")[1].trim());
+                int y = Integer.parseInt(parts[1].trim());
+                refinedPath.add(new Point(x, y));
+            }
+            refinedMovementPaths.add(refinedPath);
+        }
+    }
+    private static void fillUnrefinedMovementPaths(){
+        unrefinedMovementPaths.add("""
+                Mouse moved to X: 1159, Y: 395
+                Mouse moved to X: 1158, Y: 398
+                Mouse moved to X: 1158, Y: 399
+                Mouse moved to X: 1157, Y: 400
+                Mouse moved to X: 1157, Y: 401
+                Mouse moved to X: 1156, Y: 401
+                Mouse moved to X: 1155, Y: 402
+                Mouse moved to X: 1155, Y: 402
+                Mouse moved to X: 1155, Y: 403
+                Mouse moved to X: 1154, Y: 403
+                Mouse moved to X: 1154, Y: 403
+                Mouse moved to X: 1154, Y: 405
+                Mouse moved to X: 1151, Y: 406
+                Mouse moved to X: 1150, Y: 407
+                Mouse moved to X: 1148, Y: 408
+                Mouse moved to X: 1146, Y: 410
+                Mouse moved to X: 1146, Y: 410
+                Mouse moved to X: 1143, Y: 411
+                Mouse moved to X: 1141, Y: 413
+                Mouse moved to X: 1140, Y: 414
+                Mouse moved to X: 1138, Y: 414
+                Mouse moved to X: 1137, Y: 414
+                Mouse moved to X: 1136, Y: 414
+                Mouse moved to X: 1136, Y: 416
+                Mouse moved to X: 1134, Y: 417
+                Mouse moved to X: 1132, Y: 418
+                Mouse moved to X: 1128, Y: 419
+                Mouse moved to X: 1124, Y: 420
+                Mouse moved to X: 1121, Y: 421
+                Mouse moved to X: 1116, Y: 422
+                Mouse moved to X: 1110, Y: 423
+                Mouse moved to X: 1105, Y: 424
+                Mouse moved to X: 1102, Y: 424
+                Mouse moved to X: 1097, Y: 425
+                Mouse moved to X: 1094, Y: 425
+                Mouse moved to X: 1089, Y: 425
+                Mouse moved to X: 1082, Y: 425
+                Mouse moved to X: 1075, Y: 425
+                Mouse moved to X: 1067, Y: 426
+                Mouse moved to X: 1059, Y: 426
+                Mouse moved to X: 1052, Y: 426
+                Mouse moved to X: 1042, Y: 426
+                Mouse moved to X: 1034, Y: 426
+                Mouse moved to X: 1026, Y: 426
+                Mouse moved to X: 1018, Y: 426
+                Mouse moved to X: 1010, Y: 426
+                Mouse moved to X: 1002, Y: 425
+                Mouse moved to X: 996, Y: 424
+                Mouse moved to X: 987, Y: 423
+                Mouse moved to X: 978, Y: 421
+                Mouse moved to X: 968, Y: 418
+                Mouse moved to X: 958, Y: 417
+                Mouse moved to X: 949, Y: 414
+                Mouse moved to X: 939, Y: 410
+                Mouse moved to X: 932, Y: 407
+                Mouse moved to X: 926, Y: 404
+                Mouse moved to X: 921, Y: 402
+                Mouse moved to X: 916, Y: 398
+                Mouse moved to X: 914, Y: 396
+                Mouse moved to X: 913, Y: 395
+                Mouse moved to X: 912, Y: 394
+                Mouse moved to X: 911, Y: 392
+                Mouse moved to X: 910, Y: 392
+                Mouse moved to X: 910, Y: 390
+                Mouse moved to X: 910, Y: 390
+                Mouse moved to X: 909, Y: 389
+                Mouse moved to X: 909, Y: 388
+                Mouse moved to X: 909, Y: 387
+                Mouse moved to X: 909, Y: 386
+                Mouse moved to X: 909, Y: 386
+                Mouse moved to X: 909, Y: 385
+                Mouse moved to X: 909, Y: 384
+                Mouse moved to X: 909, Y: 383
+                Mouse moved to X: 909, Y: 382
+                Mouse moved to X: 910, Y: 382
+                Mouse moved to X: 910, Y: 381
+                Mouse moved to X: 912, Y: 380
+                Mouse moved to X: 914, Y: 379
+                Mouse moved to X: 914, Y: 378
+                Mouse moved to X: 917, Y: 377
+                Mouse moved to X: 918, Y: 376
+                Mouse moved to X: 919, Y: 376
+                Mouse moved to X: 921, Y: 375
+                Mouse moved to X: 922, Y: 375
+                Mouse moved to X: 922, Y: 374
+                Mouse moved to X: 923, Y: 374
+                Mouse moved to X: 925, Y: 374
+                Mouse moved to X: 926, Y: 374
+                Mouse moved to X: 926, Y: 374
+                Mouse moved to X: 927, Y: 374
+                Mouse moved to X: 928, Y: 374
+                Mouse moved to X: 929, Y: 374
+                Mouse moved to X: 930, Y: 374
+                Mouse moved to X: 930, Y: 374
+                Mouse moved to X: 931, Y: 374
+                Mouse moved to X: 932, Y: 375
+                Mouse moved to X: 933, Y: 376
+                Mouse moved to X: 934, Y: 377
+                Mouse moved to X: 934, Y: 378
+                Mouse moved to X: 936, Y: 378
+                Mouse moved to X: 937, Y: 380
+                Mouse moved to X: 938, Y: 381
+                Mouse moved to X: 938, Y: 382
+                Mouse moved to X: 938, Y: 382
+                Mouse moved to X: 939, Y: 383
+                Mouse moved to X: 940, Y: 385
+                Mouse moved to X: 940, Y: 386
+                Mouse moved to X: 941, Y: 387
+                Mouse moved to X: 941, Y: 389
+                Mouse moved to X: 941, Y: 390
+                Mouse moved to X: 941, Y: 391
+                Mouse moved to X: 941, Y: 393
+                Mouse moved to X: 941, Y: 394
+                Mouse moved to X: 939, Y: 396
+                Mouse moved to X: 938, Y: 398
+                Mouse moved to X: 935, Y: 400
+                Mouse moved to X: 933, Y: 402
+                Mouse moved to X: 931, Y: 404
+                Mouse moved to X: 926, Y: 409
+                Mouse moved to X: 922, Y: 412
+                Mouse moved to X: 919, Y: 414
+                Mouse moved to X: 914, Y: 416
+                Mouse moved to X: 909, Y: 418
+                Mouse moved to X: 906, Y: 419
+                Mouse moved to X: 904, Y: 420
+                Mouse moved to X: 899, Y: 422
+                Mouse moved to X: 896, Y: 423
+                Mouse moved to X: 892, Y: 424
+                Mouse moved to X: 886, Y: 426
+                Mouse moved to X: 880, Y: 426
+                Mouse moved to X: 874, Y: 427
+                Mouse moved to X: 868, Y: 430
+                Mouse moved to X: 861, Y: 430
+                Mouse moved to X: 853, Y: 431
+                Mouse moved to X: 844, Y: 434
+                Mouse moved to X: 838, Y: 434
+                Mouse moved to X: 830, Y: 435
+                Mouse moved to X: 824, Y: 437
+                Mouse moved to X: 814, Y: 438
+                Mouse moved to X: 807, Y: 438
+                Mouse moved to X: 801, Y: 439
+                Mouse moved to X: 795, Y: 441
+                Mouse moved to X: 793, Y: 441
+                Mouse moved to X: 790, Y: 441
+                Mouse moved to X: 789, Y: 442
+                Mouse moved to X: 788, Y: 442
+                Mouse moved to X: 787, Y: 442
+                Mouse moved to X: 787, Y: 443
+                Mouse moved to X: 786, Y: 443
+                Mouse moved to X: 786, Y: 444
+                Mouse moved to X: 786, Y: 444
+                Mouse moved to X: 785, Y: 444
+                """);
+    }
+    private static void fillUnrefinedPathFormulas(){
+        unrefinedPathsFormulas.add("""
+                -1,3
+                0,1
+                -1,1
+                0,1
+                -1,0
+                -1,1
+                0,0
+                0,1
+                -1,0
+                0,0
+                0,2
+                -3,1
+                -1,1
+                -2,1
+                -2,2
+                0,0
+                -3,1
+                -2,2
+                -1,1
+                -2,0
+                -1,0
+                -1,0
+                0,2
+                -2,1
+                -2,1
+                -4,1
+                -4,1
+                -3,1
+                -5,1
+                -6,1
+                -5,1
+                -3,0
+                -5,1
+                -3,0
+                -5,0
+                -7,0
+                -7,0
+                -8,1
+                -8,0
+                -7,0
+                -10,0
+                -8,0
+                -8,0
+                -8,0
+                -8,0
+                -8,-1
+                -6,-1
+                -9,-1
+                -9,-2
+                -10,-3
+                -10,-1
+                -9,-3
+                -10,-4
+                -7,-3
+                -6,-3
+                -5,-2
+                -5,-4
+                -2,-2
+                -1,-1
+                -1,-1
+                -1,-2
+                -1,0
+                0,-2
+                0,0
+                -1,-1
+                0,-1
+                0,-1
+                0,-1
+                0,0
+                0,-1
+                0,-1
+                0,-1
+                0,-1
+                1,0
+                0,-1
+                2,-1
+                2,-1
+                0,-1
+                3,-1
+                1,-1
+                1,0
+                2,-1
+                1,0
+                0,-1
+                1,0
+                2,0
+                1,0
+                0,0
+                1,0
+                1,0
+                1,0
+                1,0
+                0,0
+                1,0
+                1,1
+                1,1
+                1,1
+                0,1
+                2,0
+                1,2
+                1,1
+                0,1
+                0,0
+                1,1
+                1,2
+                0,1
+                1,1
+                0,2
+                0,1
+                0,1
+                0,2
+                0,1
+                -2,2
+                -1,2
+                -3,2
+                -2,2
+                -2,2
+                -5,5
+                -4,3
+                -3,2
+                -5,2
+                -5,2
+                -3,1
+                -2,1
+                -5,2
+                -3,1
+                -4,1
+                -6,2
+                -6,0
+                -6,1
+                -6,3
+                -7,0
+                -8,1
+                -9,3
+                -6,0
+                -8,1
+                -6,2
+                -10,1
+                -7,0
+                -6,1
+                -6,2
+                -2,0
+                -3,0
+                -1,1
+                -1,0
+                -1,0
+                0,1
+                -1,0
+                0,1
+                0,0
+                -1,0
+                """);
+    }
+
+}
+
+
