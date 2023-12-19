@@ -14,14 +14,48 @@ public class FileLinksExtractor {
     // יכול להיות שצריך להשתמש בסלניום ב-isDownloadLink כדי להוריד מהחשד של אתרים
     // בסיום לזכור להעביר ל- private מה שצריך
     static String[] downloadExtensions = new String[]{".pdf", ".doc", ".docx", ".xls", ".xlsx", ".zip", ".rar",".pptx",".mp3",".mp4"};
-    public static boolean isDownloadLink(String link, WebDriver driver) {
+
+    public static Set<String> getAllDownloadLinks(String url){
+        ChromeDriver chromeDriver = Utility.getModifiedChromeDriver();
+        chromeDriver.get(url);
+        Set<String> downloadLinks=new HashSet<>();
+        Set<String> allLinks=extractHyperLinks(chromeDriver);
+        Set<String> suspectedLinks=new HashSet<>();
+
+        for (String link:allLinks){
+            if (isDownloadLink(link)){
+                downloadLinks.add(link);
+            }
+            String lowerCaseLink=link.toLowerCase();
+            for (String extension:downloadExtensions){
+                if (lowerCaseLink.endsWith(extension)){
+                    downloadLinks.add(link);
+                    break;
+                }
+                if (isSuspectedDownloadLink(link,extension)){
+                    suspectedLinks.add(link);
+                    break;
+                }
+            }
+        }
+        suspectedLinks.removeAll(downloadLinks);
+        downloadLinks = downloadLinks.stream().filter(link -> link.length() <= 200 && !link.contains("#")).collect(Collectors.toSet());
+        for(String link: suspectedLinks){
+            if (isSuspectedDownloadLinkADownloadLik(link,chromeDriver)){ // כאן יכול להיות הרבה בקשות בזמן קצר ובכך להעלות את החשד
+                downloadLinks.add(link);
+            }
+        }
+        chromeDriver.close();// להיזהר! אם יש שימוש או יכול להיות שימוש מאוחר מכן באותו driver אז צריך למחוק
+        return downloadLinks;
+    }
+
+    public static boolean isSuspectedDownloadLinkADownloadLik(String link, WebDriver driver) {
         try {
             driver.get(link);
             // Wait for the page to load
             new WebDriverWait(driver, Duration.ofSeconds(10)).until(
                     webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete")
             );
-            // Check for signs of a CAPTCHA or robot check
             boolean isCaptchaPage = driver.findElements(By.xpath("//*[contains(text(),'CAPTCHA')]")).size() > 0 ||
                     driver.findElements(By.xpath("//*[contains(text(),'robot')]")).size() > 0;
 
@@ -50,39 +84,7 @@ public class FileLinksExtractor {
         }
         return false;
     }
-    public static Set<String> getAllDownloadLinks(String url){
-        ChromeDriver chromeDriver = Utility.getModifiedChromeDriver();
-        chromeDriver.get(url);
-        Set<String> downloadLinks=new HashSet<>();
-        Set<String> allLinks=extractHyperLinks(chromeDriver);
-        Set<String> suspectedLinks=new HashSet<>();
 
-        for (String link:allLinks){
-            if (isDownloadLink(link)){
-                downloadLinks.add(link);
-            }
-            String lowerCaseLink=link.toLowerCase();
-            for (String extension:downloadExtensions){
-                if (lowerCaseLink.endsWith(extension)){
-                    downloadLinks.add(link);
-                    break;
-                }
-                if (isSuspectedDownloadLink(link,extension)){
-                    suspectedLinks.add(link);
-                    break;
-                }
-            }
-        }
-        suspectedLinks.removeAll(downloadLinks);
-        downloadLinks = downloadLinks.stream().filter(link -> link.length() <= 200 && !link.contains("#")).collect(Collectors.toSet());
-        for(String link: suspectedLinks){
-            if (isDownloadLink(link,chromeDriver)){ // כאן יכול להיות הרבה בקשות בזמן קצר ובכך להעלות את החשד
-                downloadLinks.add(link);
-            }
-        }
-        chromeDriver.close();// להיזהר! אם יש שימוש או יכול להיות שימוש מאוחר מכן באותו driver אז צריך למחוק
-        return downloadLinks;
-    }
     public static boolean isSuspectedDownloadLink(String link, String extension) {
         link = link.toLowerCase();
         return link.contains(extension.substring(1)) &&
