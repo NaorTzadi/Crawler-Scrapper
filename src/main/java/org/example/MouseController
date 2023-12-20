@@ -26,6 +26,9 @@ public class MouseController {
         //להוסיף קוד שגורם להעכבר להחמיץ קצת את האלמנט ולאז לחזור בחזרה אליו
         //System.out.println(getMouseLocationFromElementLocationInSimpleTerms());System.out.println(getTheDistanceTheMouseNeedsToTravelToGetToTheElement());
 
+        System.out.println(element.getLocation().x+","+element.getLocation().y);
+        System.out.println(getFalseDestination());
+        System.exit(1);
         moveMouse(convertToScreenPosition());
     }
     //x= '-' left
@@ -104,28 +107,18 @@ public class MouseController {
             Thread.sleep(getRandomPause());
         }
     }
-
     private Point getFalseDestination(){
         String mouseLocationFromTheElementInSimpleTerms=getMouseLocationFromElementLocationInSimpleTerms();
-        if (mouseLocationFromTheElementInSimpleTerms.contains("up")&&mouseLocationFromTheElementInSimpleTerms.contains("left")){
-            return new Point(random.nextInt(Math.abs(element.getLocation().x+100)),random.nextInt(Math.abs(element.getLocation().x+100)));
-        }else if (mouseLocationFromTheElementInSimpleTerms.contains("up")&&mouseLocationFromTheElementInSimpleTerms.contains("right")){
-            return new Point(random.nextInt(Math.abs(element.getLocation().x+100)),random.nextInt(Math.abs(element.getLocation().x-100)));
-        }else if (mouseLocationFromTheElementInSimpleTerms.contains("down")&&mouseLocationFromTheElementInSimpleTerms.contains("left")){
-            return new Point(random.nextInt(Math.abs(element.getLocation().x-100)),random.nextInt(Math.abs(element.getLocation().x+100)));
-        }else if (mouseLocationFromTheElementInSimpleTerms.contains("down")&&mouseLocationFromTheElementInSimpleTerms.contains("right")){
-            return new Point(random.nextInt(Math.abs(element.getLocation().x-100)),random.nextInt(Math.abs(element.getLocation().x-100)));
-        }else if (mouseLocationFromTheElementInSimpleTerms.contains("inline")&&mouseLocationFromTheElementInSimpleTerms.contains("left")){
-            
-        }else if (mouseLocationFromTheElementInSimpleTerms.contains("inline")&&mouseLocationFromTheElementInSimpleTerms.contains("right")){
-
-        }else if (mouseLocationFromTheElementInSimpleTerms.contains("up")&&mouseLocationFromTheElementInSimpleTerms.contains("inline")){
-
-        }else if (mouseLocationFromTheElementInSimpleTerms.contains("down")&&mouseLocationFromTheElementInSimpleTerms.contains("inline")){
-
-        }else if (mouseLocationFromTheElementInSimpleTerms.contains("inline")&&mouseLocationFromTheElementInSimpleTerms.contains("inline")){
-
+        if (mouseLocationFromTheElementInSimpleTerms.contains("left")&&mouseLocationFromTheElementInSimpleTerms.contains("up")){
+            return new Point(element.getLocation().x-random.nextInt(100),element.getLocation().y+random.nextInt(100));
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains("right")&&mouseLocationFromTheElementInSimpleTerms.contains("up")){
+            return new Point(element.getLocation().x+random.nextInt(100),element.getLocation().y+random.nextInt(100));
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains("left")&&mouseLocationFromTheElementInSimpleTerms.contains("down")){
+            return new Point(element.getLocation().x-random.nextInt(100),element.getLocation().y-random.nextInt(100));
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains("right")&&mouseLocationFromTheElementInSimpleTerms.contains("down")){
+            return new Point(element.getLocation().x+random.nextInt(100),element.getLocation().y-random.nextInt(100));
         }
+        return null;
     }
     private int getRandomPause(){
         int pauseLevel=random.nextInt(3);
