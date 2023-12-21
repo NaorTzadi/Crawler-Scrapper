@@ -8,11 +8,16 @@ import java.awt.event.KeyEvent;
 import java.util.List;
 import java.util.Random;
 public class MouseController {
-    private WebDriver driver;
-    private WebElement element;
-    private Robot robot;
-    private Random random;
-
+    private final WebDriver driver;
+    private final WebElement element;
+    private final Robot robot;
+    private final Random random;
+    private final String MOUSE_LOCATION_UP="up";
+    private final String MOUSE_LOCATION_DOWN="down";
+    private final String MOUSE_LOCATION_LEFT="left";
+    private final String MOUSE_LOCATION_RIGHT="right";
+    private final String MOUSE_LOCATION_INLINE="inline";
+    private final  java.awt.Dimension screenResolution = Toolkit.getDefaultToolkit().getScreenSize();
     public MouseController(WebDriver driver, WebElement element) throws AWTException {
         this.driver = driver;
         this.element = element;
@@ -20,30 +25,30 @@ public class MouseController {
         this.random = new Random();
     }
     public void moveToElement() throws InterruptedException {
-        Thread.sleep(200+random.nextInt(1000));
+        Thread.sleep(200+random.nextInt(1000)); // חכה שהעמוד יטען למרות שבכללי הוא יקבל את ה-driver כשהעמוד כבר פתוח ומוכן ברוב המקרים
         if (!isWindowMaximized()){maximizeWindowPage();Thread.sleep(100+random.nextInt(200));}
+        ifElementIsOutOfViewScrollToElement();
 
-        //להוסיף קוד שגורם להעכבר להחמיץ קצת את האלמנט ולאז לחזור בחזרה אליו
-        //System.out.println(getMouseLocationFromElementLocationInSimpleTerms());System.out.println(getTheDistanceTheMouseNeedsToTravelToGetToTheElement());
-
-        System.out.println(element.getLocation().x+","+element.getLocation().y);
-        System.out.println(getFalseDestination());
-        System.exit(1);
-        moveMouse(convertToScreenPosition());
+        //System.out.println("mouse distance to element: "+getTheDistanceTheMouseNeedsToTravelToGetToTheDestination(element.getLocation()));
+        //System.out.println("element destination: "+element.getLocation().x+","+element.getLocation().y);
+        //System.out.println(getMouseLocationFromElementLocationInSimpleTerms());
+        //System.out.println("false destination: "+getFalseDestinationInOrderToMimicHumanLikeInaccuracy());
+        //System.out.println(isElementInView());
+        //System.exit(1);
+        
+        moveMouse(getFalseDestinationInOrderToMimicHumanLikeInaccuracy(),false);
+        moveMouse(getElementPositionRelativeToViewport(),true);
+        if (isElementClickable()){robotDoClick();}
     }
     //x= '-' left
     //x= '+' right
     //y= '-' up
     //y= '+' down
-    private void moveMouse(Point destination) throws InterruptedException {
+    private void moveMouse(Point destination,boolean didRandomMovement) throws InterruptedException {
         java.awt.Point currentLocation = MouseInfo.getPointerInfo().getLocation();
         boolean xReached = false, yReached = false;
         int proximityThreshold = 10;
         int iterationsCount=0;
-        boolean didRandomMovement=false;
-        int consecutiveXMoves = 0, consecutiveYMoves = 0;
-        int lastXMove = 0, lastYMove = 0;
-        int maxConsecutiveMoves =5+random.nextInt(6);
         long startTime=System.currentTimeMillis();
         while (!(xReached && yReached)) {
             System.out.println("current x: " + currentLocation.x + "   current y: " + currentLocation.y);
@@ -55,8 +60,7 @@ public class MouseController {
             xReached = Math.abs(xDistance) <= proximityThreshold;
             yReached = Math.abs(yDistance) <= proximityThreshold;
 
-            if (!didRandomMovement&&1+random.nextInt(20)==20){doRandomMovement();didRandomMovement=true;currentLocation=MouseInfo.getPointerInfo().getLocation();}
-
+            if (!didRandomMovement&&1+random.nextInt(30)==30){doRandomMovement();didRandomMovement=true;currentLocation=MouseInfo.getPointerInfo().getLocation();}
             if (!xReached || !yReached) {
                 double totalDistance = Math.sqrt(xDistance * xDistance + yDistance * yDistance);
                 double xRatio = totalDistance != 0 ? Math.abs((double)xDistance) / totalDistance : 0;
@@ -72,7 +76,12 @@ public class MouseController {
                 xStep *= (xDistance > 0) ? 1 : -1;
                 yStep *= (yDistance > 0) ? 1 : -1;
 
-                robot.mouseMove(currentLocation.x + xStep, currentLocation.y + yStep);
+                int nextX = currentLocation.x + xStep;
+                int nextY = currentLocation.y + yStep;
+
+                // Break the loop if the next move is out of the screen
+                if (nextX < 0 || nextX > screenResolution.width || nextY < 0 || nextY > screenResolution.height) {break;}
+                robot.mouseMove(nextX, nextY);
                 currentLocation = MouseInfo.getPointerInfo().getLocation();
                 Thread.sleep(getRandomPause());
             }
@@ -82,19 +91,48 @@ public class MouseController {
         Thread.sleep(getRandomPause());
         robot.mouseMove(destination.x, destination.y);
 
-        if (isElementClickable()){
-            robot.mousePress(InputEvent.BUTTON1_MASK);
-            robot.delay(getRandomPause());
-            robot.mouseRelease(InputEvent.BUTTON1_MASK);
-        }
         System.out.println("Iterations: " + iterationsCount);//למחוק אחרי שהכל עובד
-        long endTime=System.currentTimeMillis();
-        long elapsedTime = endTime - startTime;
-        System.out.println("time taken: "+elapsedTime);//למחוק אחרי שהכל עובד
+        long endTime=System.currentTimeMillis();             //
+        long elapsedTime = endTime - startTime;              //
+        System.out.println("time taken: "+elapsedTime);      //למחוק אחרי שהכל עובד
+    }
+    private boolean isElementInView() {
+        Point location = element.getLocation();
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        Number pageHeight = (Number) js.executeScript("return window.innerHeight;");
+        Number scrollTop = (Number) js.executeScript("return window.pageYOffset;");
+        long elementTop = location.getY();
+        long elementBottom = elementTop + element.getSize().getHeight();
+        return elementTop >= scrollTop.longValue() && elementBottom <= (scrollTop.longValue() + pageHeight.longValue());
+    }
+
+    private void ifElementIsOutOfViewScrollToElement() throws InterruptedException { // מה אם האלמנט נראה לעין כאשר מגללים לרוחב ולא לאורך?
+       //להוזיז את העכבר שיהיה על העמוד איפשהו
+        final int pixelsPassedPerFullScroll=800; //בערך כמות הפיקסלים שהאדם עובר בממוצע בכל גלילה מלאה
+        final int pixelsToScrollPerNotch=16;
+        int sumPixelsPassedPerNotch=0;
+        while (!isElementInView()) {
+            if (sumPixelsPassedPerNotch>pixelsPassedPerFullScroll){
+                sumPixelsPassedPerNotch=0;
+                Thread.sleep(100+random.nextInt(150));// long brake
+            }
+            sumPixelsPassedPerNotch+=pixelsToScrollPerNotch;
+            ((JavascriptExecutor) driver).executeScript("window.scrollBy(0,"+pixelsToScrollPerNotch+");"); // Scrolls down random pixels distance
+            Thread.sleep(10+random.nextInt(11)); // short brake
+        }
+        for (int i=0;i<8;i++){ // תעקוף את היעד קצת
+            ((JavascriptExecutor) driver).executeScript("window.scrollBy(0,"+pixelsToScrollPerNotch+");");
+            Thread.sleep(10+random.nextInt(11));
+        }
+        for (int i=0;i<6;i++){ // תחזור אל היעד
+            ((JavascriptExecutor) driver).executeScript("window.scrollBy(0,"+-pixelsToScrollPerNotch+");");
+            Thread.sleep(10+random.nextInt(11));
+        }
+        Thread.sleep(10+random.nextInt(20));
     }
     private void doRandomMovement() throws InterruptedException {
         List<List<java.awt.Point>> pathsFormulas;
-        if (getMouseLocationFromElementLocationInSimpleTerms().contains("left")){
+        if (getMouseLocationFromElementLocationInSimpleTerms().contains(MOUSE_LOCATION_LEFT)){
             pathsFormulas=MouseMovementPaths.getPathsFormulasLeftToTheElement();
         }else {
             pathsFormulas=MouseMovementPaths.getPathsFormulasRightToTheElement();
@@ -107,19 +145,54 @@ public class MouseController {
             Thread.sleep(getRandomPause());
         }
     }
-    private Point getFalseDestination(){
+    private Point getElementPositionRelativeToViewport() {
+        Point absolutePosition = element.getLocation();
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        long scrollX = (long) js.executeScript("return window.pageXOffset;");
+        long scrollY = (long) js.executeScript("return window.pageYOffset;");
+        int relativeX = absolutePosition.getX() - (int) scrollX;
+        int relativeY = absolutePosition.getY() - (int) scrollY;
+        return new Point(relativeX, relativeY);
+    }
+    private Point getFalseDestinationInOrderToMimicHumanLikeInaccuracy(){
         String mouseLocationFromTheElementInSimpleTerms=getMouseLocationFromElementLocationInSimpleTerms();
-        if (mouseLocationFromTheElementInSimpleTerms.contains("left")&&mouseLocationFromTheElementInSimpleTerms.contains("up")){
-            return new Point(element.getLocation().x-random.nextInt(100),element.getLocation().y+random.nextInt(100));
-        }else if (mouseLocationFromTheElementInSimpleTerms.contains("right")&&mouseLocationFromTheElementInSimpleTerms.contains("up")){
-            return new Point(element.getLocation().x+random.nextInt(100),element.getLocation().y+random.nextInt(100));
-        }else if (mouseLocationFromTheElementInSimpleTerms.contains("left")&&mouseLocationFromTheElementInSimpleTerms.contains("down")){
-            return new Point(element.getLocation().x-random.nextInt(100),element.getLocation().y-random.nextInt(100));
-        }else if (mouseLocationFromTheElementInSimpleTerms.contains("right")&&mouseLocationFromTheElementInSimpleTerms.contains("down")){
-            return new Point(element.getLocation().x+random.nextInt(100),element.getLocation().y-random.nextInt(100));
+        Point elementPosition=getElementPositionRelativeToViewport();
+        int limitX=screenResolution.width-elementPosition.x;if (limitX>100){limitX=100;}
+        int limitY=screenResolution.height-elementPosition.y;if (limitY>100){limitY=100;}
+        if (mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_LEFT)&&mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_UP)){
+            return new Point(elementPosition.x-random.nextInt(limitX+1),elementPosition.y+random.nextInt(limitY+1));
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_RIGHT)&&mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_UP)){
+            return new Point(elementPosition.x+random.nextInt(limitX+1),elementPosition.y+random.nextInt(limitY+1));
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_LEFT)&&mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_DOWN)){
+            return new Point(elementPosition.x-random.nextInt(limitX+1),elementPosition.y-random.nextInt(limitY+1));
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_RIGHT)&&mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_DOWN)){
+            return new Point(elementPosition.x+random.nextInt(limitX+1),elementPosition.y-random.nextInt(limitY+1));
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_INLINE)&&mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_UP)){
+            return new Point(elementPosition.x+random.nextInt(limitX+1),elementPosition.y+random.nextInt(limitY+1));
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_INLINE)&&mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_DOWN)){
+            return new Point(elementPosition.x-random.nextInt(limitX+1),elementPosition.y-random.nextInt(limitY+1));
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_LEFT)&&mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_INLINE)){
+            return new Point(elementPosition.x-random.nextInt(limitX+1),elementPosition.y-random.nextInt(limitY+1));
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_RIGHT)&&mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_INLINE)){
+            return new Point(elementPosition.x+random.nextInt(limitX+1),elementPosition.y+random.nextInt(limitY+1));
         }
         return null;
     }
+   /* private Point getFalseDestinationInOrderToMimicHumanLikeInaccuracy(){
+        String mouseLocationFromTheElementInSimpleTerms=getMouseLocationFromElementLocationInSimpleTerms();
+        int limitX=screenResolution.width-element.getLocation().x;
+        int limitY=screenResolution.height-element.getLocation().y;
+        if (mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_LEFT)&&mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_UP)){
+            return new Point(element.getLocation().x-random.nextInt(100),element.getLocation().y+random.nextInt(100));
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_RIGHT)&&mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_UP)){
+            return new Point(element.getLocation().x+random.nextInt(100),element.getLocation().y+random.nextInt(100));
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_LEFT)&&mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_DOWN)){
+            return new Point(element.getLocation().x-random.nextInt(100),element.getLocation().y-random.nextInt(100));
+        }else if (mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_RIGHT)&&mouseLocationFromTheElementInSimpleTerms.contains(MOUSE_LOCATION_DOWN)){
+            return new Point(element.getLocation().x+random.nextInt(100),element.getLocation().y-random.nextInt(100));
+        }
+        return null;
+    }*/
     private int getRandomPause(){
         int pauseLevel=random.nextInt(3);
         if (pauseLevel==0){
@@ -130,28 +203,32 @@ public class MouseController {
             return 10+random.nextInt(30);
         }
     }
-    private String getTheDistanceTheMouseNeedsToTravelToGetToTheElement(){
+    private void robotDoClick(){
+        robot.mousePress(InputEvent.BUTTON1_MASK);
+        robot.delay(getRandomPause());
+        robot.mouseRelease(InputEvent.BUTTON1_MASK);
+    }
+    private Point getTheDistanceTheMouseNeedsToTravelToGetToTheDestination(Point destination){ // למחוק-רק לצורך בדיקה
         java.awt.Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
-        return "X distance: "+Math.abs(mouseLocation.x-element.getLocation().x)+
-                "  Y distance: "+Math.abs(mouseLocation.y-element.getLocation().y);
+        return new Point(Math.abs(mouseLocation.x-destination.x),Math.abs(mouseLocation.y-destination.y));
     }
     private String getMouseLocationFromElementLocationInSimpleTerms() {
         java.awt.Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
         String horizontalPosition;
         if (mouseLocation.x < element.getLocation().x) {
-            horizontalPosition = "left";
+            horizontalPosition = MOUSE_LOCATION_LEFT;
         } else if (mouseLocation.x > element.getLocation().x + element.getSize().getWidth()) {
-            horizontalPosition = "right";
+            horizontalPosition = MOUSE_LOCATION_RIGHT;
         } else {
-            horizontalPosition = "inline";
+            horizontalPosition = MOUSE_LOCATION_INLINE;
         }
         String verticalPosition;
         if (mouseLocation.y < element.getLocation().y) {
-            verticalPosition = "up";
+            verticalPosition = MOUSE_LOCATION_UP;
         } else if (mouseLocation.y > element.getLocation().y + element.getSize().getHeight()) {
-            verticalPosition = "down";
+            verticalPosition = MOUSE_LOCATION_DOWN;
         } else {
-            verticalPosition = "inline";
+            verticalPosition = MOUSE_LOCATION_INLINE;
         }
         return verticalPosition + "," + horizontalPosition;
     }
@@ -207,7 +284,7 @@ public class MouseController {
 
         return new Point(randomElementX, randomElementY);
     }
-    private boolean isElementClickable() {
+    private boolean isElementClickable() { // לוודא שכשאנחנו עושים את הבדיקה הזאת אנחנו לא מוזיזים את העכבר דרך סלניום או הרובוט
         if (!element.isDisplayed() || !element.isEnabled()) {return false;}
         String script = "var rect = arguments[0].getBoundingClientRect();" +
                 "return (rect.width > 0 && rect.height > 0 &&" +
