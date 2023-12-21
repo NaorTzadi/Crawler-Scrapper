@@ -146,14 +146,18 @@ public class MouseController {
         }
     }
     private Point getElementPositionRelativeToViewport() {
-        Point absolutePosition = element.getLocation();
+        int randomXOffset = random.nextInt(element.getSize().getWidth());
+        int randomYOffset = random.nextInt(element.getSize().getHeight());
+        int randomElementX = element.getLocation().getX() + randomXOffset;
+        int randomElementY = element.getLocation().getY() + randomYOffset;
         JavascriptExecutor js = (JavascriptExecutor) driver;
         long scrollX = (long) js.executeScript("return window.pageXOffset;");
         long scrollY = (long) js.executeScript("return window.pageYOffset;");
-        int relativeX = absolutePosition.getX() - (int) scrollX;
-        int relativeY = absolutePosition.getY() - (int) scrollY;
+        int relativeX = randomElementX - (int) scrollX;
+        int relativeY = randomElementY - (int) scrollY;
         return new Point(relativeX, relativeY);
     }
+
     private Point getFalseDestinationInOrderToMimicHumanLikeInaccuracy(){
         String mouseLocationFromTheElementInSimpleTerms=getMouseLocationFromElementLocationInSimpleTerms();
         Point elementPosition=getElementPositionRelativeToViewport();
@@ -268,21 +272,6 @@ public class MouseController {
         int threshold = 50; // Pixels threshold to account for window borders/taskbar
         return Math.abs(windowSize.height - screenSize.height) <= threshold
                 && Math.abs(windowSize.width - screenSize.width) <= threshold;
-    }
-    private Point convertToScreenPosition() {
-        // Adjust according to the browser's position and window decorations if necessary
-        // This part may need adjustments based on the browser and OS
-        // For simplicity, assuming the browser is in the top left corner of the screen
-
-        // Generate a random offset within the element's width and height
-        int randomXOffset = random.nextInt(element.getSize().getWidth());
-        int randomYOffset = random.nextInt(element.getSize().getHeight());
-
-        // Calculate the random point within the element
-        int randomElementX = element.getLocation().getX() + randomXOffset;
-        int randomElementY = element.getLocation().getY() + randomYOffset;
-
-        return new Point(randomElementX, randomElementY);
     }
     private boolean isElementClickable() { // לוודא שכשאנחנו עושים את הבדיקה הזאת אנחנו לא מוזיזים את העכבר דרך סלניום או הרובוט
         if (!element.isDisplayed() || !element.isEnabled()) {return false;}
