@@ -1,0 +1,10 @@
+package org.example;
+
+public class ScrollerMovementPaths {
+    private static final int[] slowFullCircleScrollingSpeed={4,4,4,4,4,4,4,4,4};
+    private static final int[] mediumFullCircleScrollingSpeed={4,4,4,4,4,4,4,4,4,4,4};
+    private static final int[] fastFullCircleScrollingSpeed={4,4,4,4,4,4,4,8,8,8};
+    private static final int[] slowScrollingSpeedShortBurts={4,4,4,4};
+    private static final int[] mediumScrollingSpeedShortBurts={4,4,4,4,4,4};
+    private static final int[] fastScrollingSpeedShortBurts={4,4,8,4,4,4};
+}
