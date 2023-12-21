@@ -10,12 +10,14 @@ public class Main {
     private final static ArrayList<WebScrapperDataBase> webScrapperDataBase=new ArrayList<>();
     public static void main(String[] args) {
         //new MouseTracker();Scanner scanner=new Scanner(System.in);scanner.nextLine();
+        //new ScrollerTracker();Scanner scanner=new Scanner(System.in);scanner.nextLine();
+
         MouseMovementPaths.fillMovementPaths();
 
         ChromeDriver chromeDriver=Utility.getModifiedChromeDriver();
         chromeDriver.get("https://books.toscrape.com/");
         try {
-            WebElement element=chromeDriver.findElement(By.xpath("//*[@id=\"default\"]/div/div/div/div/section/div[2]/ol/li[1]/article/div[1]/a/img"));
+            WebElement element=chromeDriver.findElement(By.xpath("//*[@id=\"default\"]/div/div/div/div/section/div[2]/ol/li[10]/article/div[2]/form/button"));
             MouseController mouseController=new MouseController(chromeDriver,element);
             mouseController.moveToElement();
         }catch (Exception e){
@@ -95,7 +97,8 @@ public class Main {
     }
     private static void webScrapperOptionsMenu(){
         final String option1="1"; final String option2="2";final String option3="3";final String option4="4";
-        final String option5="5";final String option6="6";final String option7="7"; String goBackOption="0";
+        final String option5="5";final String option6="6";final String option7="7";final String option8="8";
+        final String goBackOption="0";
         Scanner scanner=new Scanner(System.in);
         String decision;
         int counter=0;
@@ -106,23 +109,26 @@ public class Main {
             System.out.println("press "+option2+" to search for a key word.");
             System.out.println("press "+option3+" to retrieve image links.");
             System.out.println("press "+option4+" to retrieve video links.");
-            System.out.println("press "+option5+" to check web scrapper data base history");
-            System.out.println("press "+option6+" to erase a data base section.");
-            System.out.println("press "+option7+" to erase all data base history.");
+            System.out.println("press "+option5+" to retrieve download files.");
+            System.out.println("press "+option6+" to check web scrapper data base history");
+            System.out.println("press "+option7+" to erase a data base section.");
+            System.out.println("press "+option8+" to erase all data base history.");
             decision=scanner.nextLine();
             if(decision.equals(goBackOption)){mainMenu();}
             counter++;
-        }while (!decision.matches("\\d+") || Integer.parseInt(decision) > 7 || Integer.parseInt(decision) < 0);
-        if(Integer.parseInt(decision)>0 && Integer.parseInt(decision)<5){
+        }while (!decision.matches("\\d+") || Integer.parseInt(decision) > 8 || Integer.parseInt(decision) < 0);
+        if(Integer.parseInt(decision)>0 && Integer.parseInt(decision)<6){
             String url=Utility.promptUrl();
             if (url.equals("0")){webScrapperOptionsMenu();return;}
           processPhase(url,decision);
-        }else if (decision.equals(option5)){
-            getWebScrapperHistoryMenu();
+
         }else if (decision.equals(option6)){
-            eraseWebScrapperData();
+            getWebScrapperHistoryMenu();
         }else if (decision.equals(option7)){
+            eraseWebScrapperData();
+        }else if (decision.equals(option8)){
             eraseWebScrapperDataBase();
+
         }
         System.out.println();webScrapperOptionsMenu();
     }
@@ -134,7 +140,7 @@ public class Main {
                 return;
             }
         }
-        webScrapperDataBase.add(WebScrapper.webScrapperOperator(decision,new WebScrapperDataBase(url,WebScrapper.getContentType(url),null,null,null)));
+        webScrapperDataBase.add(WebScrapper.webScrapperOperator(decision,new WebScrapperDataBase(url,WebScrapper.getContentType(url),null,null,null,null)));
     }
     private static void eraseWebScrapperData(){
         if(webScrapperDataBase.isEmpty()){System.out.println("nothing to erase because the data base is empty!");return;}
