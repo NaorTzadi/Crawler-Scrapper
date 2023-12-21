@@ -1,0 +1,63 @@
+package org.example;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+public class ScrollerTracker extends JFrame implements KeyListener{
+    private JScrollPane scrollPane;
+    private static long startTime;
+    private static int notchesCount;
+    private static int sumPixelsScrolled;
+    private int lastScrollPosition = 0; // Track the last scroll position
+    public ScrollerTracker() {
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setSize(300, 300);
+        this.addKeyListener(this);
+        JPanel panel = new JPanel();
+        panel.setPreferredSize(new Dimension(500, 500));
+        panel.setLayout(new FlowLayout());
+        scrollPane = new JScrollPane(panel);
+        startTime=System.currentTimeMillis();
+        scrollPane.addMouseWheelListener(new MouseWheelListener() {
+            @Override
+            public void mouseWheelMoved(MouseWheelEvent e) {
+                JScrollBar bar = scrollPane.getVerticalScrollBar();
+                int currentScrollPosition = bar.getValue();
+                int notches = e.getWheelRotation();
+                notchesCount += Math.abs(notches); // Increment the total notches count
+
+                int newScrollValue = currentScrollPosition + (notches * bar.getUnitIncrement());
+                bar.setValue(newScrollValue);
+
+                int pixelsScrolled = newScrollValue - lastScrollPosition;
+                lastScrollPosition = newScrollValue;
+                double pixelsPerNotch = (double)pixelsScrolled / notches;
+                sumPixelsScrolled+=pixelsScrolled;
+                //System.out.print(pixelsScrolled+",");
+                System.out.println("Scrolled " + notches + " notches (" + pixelsScrolled + " pixels), " + "Pixels per notch: " + pixelsPerNotch);
+            }
+        });
+        this.add(scrollPane);
+        this.setVisible(true);
+    }
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+            long endTime = System.currentTimeMillis();
+            long elapsedTime = endTime - startTime;
+            System.out.println("Elapsed time: " + elapsedTime + " milliseconds");
+            System.out.println("notches count: "+notchesCount);
+            System.out.println("sum pixels scrolled: "+sumPixelsScrolled);
+            int averagePixelsScrolledPerSecond=(sumPixelsScrolled/(Math.round(elapsedTime)/1000));
+            System.out.println("average pixels scrolled per second: "+averagePixelsScrolledPerSecond);
+            int averagePixelsScrolledPerNotch=sumPixelsScrolled/notchesCount;
+            System.out.println("average pixels scrolled per notch: "+averagePixelsScrolledPerNotch);
+            System.exit(0); // Close the application
+        }
+    }
+    @Override
+    public void keyTyped(KeyEvent e) {}
+    @Override
+    public void keyReleased(KeyEvent e) {}
+
+
+}
