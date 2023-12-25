@@ -1,7 +1,6 @@
 package org.example;
 import javax.swing.*;
 import java.awt.event.*;
-import java.util.HashMap;
 
 public class MouseTracker extends JFrame implements MouseMotionListener, KeyListener {
     private static long startTime;
@@ -9,11 +8,11 @@ public class MouseTracker extends JFrame implements MouseMotionListener, KeyList
     public MouseTracker() {
         this.addMouseMotionListener(this);
         this.addKeyListener(this);
-        this.setExtendedState(JFrame.MAXIMIZED_BOTH); // Set to full screen size
-        this.setUndecorated(true); // Remove window decorations (optional)
+        this.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        this.setUndecorated(true);
         this.setVisible(true);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setFocusable(true); // Important to receive key events
+        this.setFocusable(true);
         startTime=System.currentTimeMillis();
     }
     @Override
@@ -26,27 +25,16 @@ public class MouseTracker extends JFrame implements MouseMotionListener, KeyList
             System.exit(0); // Close the application
         }
     }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-        // Implement if needed
-    }
-
-    @Override
-    public void keyTyped(KeyEvent e) {
-        // Implement if needed
-    }
-
     @Override
     public void mouseMoved(MouseEvent e) {
-        System.out.println("Mouse moved to X: " + e.getX() + ", Y: " + e.getY());
+        System.out.println(e.getX()+","+e.getY());
+        //System.out.println("Mouse moved to X: " + e.getX() + ", Y: " + e.getY());
         movementsCount++;
     }
-
     @Override
-    public void mouseDragged(MouseEvent e) {
-        // Implement if needed
-    }
-
-
+    public void keyReleased(KeyEvent e) {}
+    @Override
+    public void keyTyped(KeyEvent e) {}
+    @Override
+    public void mouseDragged(MouseEvent e) {}
 }
