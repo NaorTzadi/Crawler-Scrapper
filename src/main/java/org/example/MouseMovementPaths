@@ -2,21 +2,30 @@ package org.example;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-
 public class MouseMovementPaths {
-    private static final ArrayList<String> unrefinedMovementPaths =new ArrayList<>();
-    private static final List<List<Point>> refinedMovementPaths = new ArrayList<>();
-    private static final List<String> unrefinedPathsFormulas =new ArrayList<>();
-    private static final List<List<Point>> pathsFormulasRightToTheElement =new ArrayList<>();
-    private static final List<List<Point>> pathsFormulasLeftToTheElement =new ArrayList<>();
-    public static List<List<Point>> getPathsFormulasRightToTheElement(){return pathsFormulasRightToTheElement;}
-    public static List<List<Point>> getPathsFormulasLeftToTheElement(){return pathsFormulasLeftToTheElement;}
-    public static void fillMovementPaths(){
-        fillUnrefinedPathFormulas();
+    private static final List<String> movementPaths =new ArrayList<>();
+    private static final List<String> formulaPaths =new ArrayList<>();
+    private static final List<List<Point>> formulaPathsRightToTheElement =new ArrayList<>();
+    private static final List<List<Point>> formulaPathsLeftToTheElement =new ArrayList<>();
+    public static List<List<Point>> getFormulaPathsRightToTheElement(){return formulaPathsRightToTheElement;}
+    public static List<List<Point>> getFormulaPathsLeftToTheElement(){return formulaPathsLeftToTheElement;}
+    private static final List<Point> mouseToScreenPathFormulaUpperRightSide=new ArrayList<>();
+    private static final List<Point> mouseToScreenPathFormulaUpperLeftSide = new ArrayList<>();
+    private static final List<Point> mouseToScreenPathFormulaBottomRightSide = new ArrayList<>();
+    private static final List<Point> mouseToScreenPathFormulaBottomLeftSide = new ArrayList<>();
+    public static List<Point> getMouseToScreenPathFormulaUpperRightSide(){return mouseToScreenPathFormulaUpperRightSide;}
+    public static List<Point> getMouseToScreenPathFormulaUpperLeftSide(){return mouseToScreenPathFormulaUpperLeftSide;}
+    public static List<Point> getMouseToScreenPathFormulaBottomRightSide(){return mouseToScreenPathFormulaBottomRightSide;}
+    public static List<Point> getMouseToScreenPathFormulaBottomLeftSide(){return mouseToScreenPathFormulaBottomLeftSide;}
+    public static void fillPaths(){
+        //fillMovementPaths();
+        //processMovementPaths();
+        fillMouseToScreenFormulas();
+        fillFormulasPaths();
         fillPathFormulas();
     }
     private static void fillPathFormulas() {
-        for (String formula : unrefinedPathsFormulas) {
+        for (String formula : formulaPaths) {
             String[] lines = formula.split("\n");
             List<Point> pathFormula = new ArrayList<>();
             List<Point> mirroredPathFormula = new ArrayList<>();
@@ -31,20 +40,33 @@ public class MouseMovementPaths {
 
                 pathFormula.add(originalPoint);
                 mirroredPathFormula.add(mirroredPoint);
+
             }
-            pathsFormulasRightToTheElement.add(pathFormula);
-            pathsFormulasLeftToTheElement.add(mirroredPathFormula);
+            formulaPathsRightToTheElement.add(pathFormula);
+            formulaPathsLeftToTheElement.add(mirroredPathFormula);
+        }
+    }
+    private static void fillMouseToScreenFormulas(){
+        String[] lines = mouseToScreenFormula.split("\n");
+        for (String line:lines){
+            String[] parts = line.split(",");
+            int x = Integer.parseInt(parts[0].trim());
+            int y = Integer.parseInt(parts[1].trim());
+            mouseToScreenPathFormulaUpperRightSide.add(new Point(x,y));
+            mouseToScreenPathFormulaUpperLeftSide.add(new Point(-x,y));
+            mouseToScreenPathFormulaBottomRightSide.add(new Point(x,-y));
+            mouseToScreenPathFormulaBottomLeftSide.add(new Point(-x,-y));
         }
     }
     private static void processMovementPaths() {
-        for (String movementPath : unrefinedMovementPaths) {
+        for (String movementPath : movementPaths) {
             String[] lines = movementPath.split("\n");
             List<Point> refinedPath = new ArrayList<>();
             List<Point> pathDelta = new ArrayList<>();
 
             for (int i = 0; i < lines.length; i++) {
-                String[] parts = lines[i].split(", Y: ");
-                int x = Integer.parseInt(parts[0].split(": ")[1].trim());
+                String[] parts = lines[i].split(",");
+                int x = Integer.parseInt(parts[0].trim());
                 int y = Integer.parseInt(parts[1].trim());
                 refinedPath.add(new Point(x, y));
 
@@ -56,194 +78,84 @@ public class MouseMovementPaths {
                     pathDelta.add(new Point(xDifference, yDifference));
                 }
             }
-            pathsFormulasRightToTheElement.add(pathDelta);
+            formulaPathsRightToTheElement.add(pathDelta);
         }
     }
-
-    private static void fillPathsPoints() {
-        for (List<Point> path : refinedMovementPaths) {
-            List<Point> pathFormula = new ArrayList<>();
-            for (int i = 0; i < path.size() - 1; i++) {
-                Point currentPoint = path.get(i);
-                Point nextPoint = path.get(i + 1);
-                int xDifference = nextPoint.x - currentPoint.x;
-                int yDifference = nextPoint.y - currentPoint.y;
-                pathFormula.add(new Point(xDifference, yDifference));
-            }
-            pathsFormulasRightToTheElement.add(pathFormula);
-        }
+    private static void fillMovementPaths(){
+        movementPaths.add("""
+                        1267,25
+                        1265,27
+                        1264,28
+                        1262,29
+                        1261,30
+                        1258,33
+                        1257,34
+                        1255,36
+                        1253,37
+                        1250,38
+                        1247,41
+                        1243,44
+                        1240,46
+                        1236,48
+                        1231,52
+                        1225,56
+                        1216,62
+                        1207,68
+                        1199,74
+                        1188,81
+                        1173,91
+                        1154,102
+                        1130,115
+                        1104,129
+                        1073,144
+                        1038,160
+                        1002,177
+                        962,195
+                        923,216
+                        886,238
+                        842,266
+                        802,291
+                        764,316
+                        732,338
+                        697,362
+                        664,383
+                        634,405
+                        602,426
+                        574,445
+                        544,466
+                        514,486
+                        487,502
+                        466,518
+                        443,534
+                        422,547
+                        402,561
+                        386,572
+                        373,581
+                        359,587
+                        351,593
+                        344,597
+                        337,600
+                        334,602
+                        333,603
+                        331,604
+                        330,604
+                        330,604
+                        330,604
+                        332,604
+                        334,604
+                        335,604
+                        337,604
+                        338,603
+                        341,602
+                        341,602
+                        342,602
+                        342,602
+                        342,601
+                        343,601
+                       """);
     }
-    private static void fillRefinedMovementPaths() {
-        for (String movementPath : unrefinedMovementPaths) {
-            String[] lines = movementPath.split("\n");
-            List<Point> refinedPath = new ArrayList<>();
-            for (String line : lines) {
-                String[] parts = line.split(", Y: ");
-                int x = Integer.parseInt(parts[0].split(": ")[1].trim());
-                int y = Integer.parseInt(parts[1].trim());
-                refinedPath.add(new Point(x, y));
-            }
-            refinedMovementPaths.add(refinedPath);
-        }
-    }
-    private static void fillUnrefinedMovementPaths(){
-        unrefinedMovementPaths.add("""
-                Mouse moved to X: 1159, Y: 395
-                Mouse moved to X: 1158, Y: 398
-                Mouse moved to X: 1158, Y: 399
-                Mouse moved to X: 1157, Y: 400
-                Mouse moved to X: 1157, Y: 401
-                Mouse moved to X: 1156, Y: 401
-                Mouse moved to X: 1155, Y: 402
-                Mouse moved to X: 1155, Y: 402
-                Mouse moved to X: 1155, Y: 403
-                Mouse moved to X: 1154, Y: 403
-                Mouse moved to X: 1154, Y: 403
-                Mouse moved to X: 1154, Y: 405
-                Mouse moved to X: 1151, Y: 406
-                Mouse moved to X: 1150, Y: 407
-                Mouse moved to X: 1148, Y: 408
-                Mouse moved to X: 1146, Y: 410
-                Mouse moved to X: 1146, Y: 410
-                Mouse moved to X: 1143, Y: 411
-                Mouse moved to X: 1141, Y: 413
-                Mouse moved to X: 1140, Y: 414
-                Mouse moved to X: 1138, Y: 414
-                Mouse moved to X: 1137, Y: 414
-                Mouse moved to X: 1136, Y: 414
-                Mouse moved to X: 1136, Y: 416
-                Mouse moved to X: 1134, Y: 417
-                Mouse moved to X: 1132, Y: 418
-                Mouse moved to X: 1128, Y: 419
-                Mouse moved to X: 1124, Y: 420
-                Mouse moved to X: 1121, Y: 421
-                Mouse moved to X: 1116, Y: 422
-                Mouse moved to X: 1110, Y: 423
-                Mouse moved to X: 1105, Y: 424
-                Mouse moved to X: 1102, Y: 424
-                Mouse moved to X: 1097, Y: 425
-                Mouse moved to X: 1094, Y: 425
-                Mouse moved to X: 1089, Y: 425
-                Mouse moved to X: 1082, Y: 425
-                Mouse moved to X: 1075, Y: 425
-                Mouse moved to X: 1067, Y: 426
-                Mouse moved to X: 1059, Y: 426
-                Mouse moved to X: 1052, Y: 426
-                Mouse moved to X: 1042, Y: 426
-                Mouse moved to X: 1034, Y: 426
-                Mouse moved to X: 1026, Y: 426
-                Mouse moved to X: 1018, Y: 426
-                Mouse moved to X: 1010, Y: 426
-                Mouse moved to X: 1002, Y: 425
-                Mouse moved to X: 996, Y: 424
-                Mouse moved to X: 987, Y: 423
-                Mouse moved to X: 978, Y: 421
-                Mouse moved to X: 968, Y: 418
-                Mouse moved to X: 958, Y: 417
-                Mouse moved to X: 949, Y: 414
-                Mouse moved to X: 939, Y: 410
-                Mouse moved to X: 932, Y: 407
-                Mouse moved to X: 926, Y: 404
-                Mouse moved to X: 921, Y: 402
-                Mouse moved to X: 916, Y: 398
-                Mouse moved to X: 914, Y: 396
-                Mouse moved to X: 913, Y: 395
-                Mouse moved to X: 912, Y: 394
-                Mouse moved to X: 911, Y: 392
-                Mouse moved to X: 910, Y: 392
-                Mouse moved to X: 910, Y: 390
-                Mouse moved to X: 910, Y: 390
-                Mouse moved to X: 909, Y: 389
-                Mouse moved to X: 909, Y: 388
-                Mouse moved to X: 909, Y: 387
-                Mouse moved to X: 909, Y: 386
-                Mouse moved to X: 909, Y: 386
-                Mouse moved to X: 909, Y: 385
-                Mouse moved to X: 909, Y: 384
-                Mouse moved to X: 909, Y: 383
-                Mouse moved to X: 909, Y: 382
-                Mouse moved to X: 910, Y: 382
-                Mouse moved to X: 910, Y: 381
-                Mouse moved to X: 912, Y: 380
-                Mouse moved to X: 914, Y: 379
-                Mouse moved to X: 914, Y: 378
-                Mouse moved to X: 917, Y: 377
-                Mouse moved to X: 918, Y: 376
-                Mouse moved to X: 919, Y: 376
-                Mouse moved to X: 921, Y: 375
-                Mouse moved to X: 922, Y: 375
-                Mouse moved to X: 922, Y: 374
-                Mouse moved to X: 923, Y: 374
-                Mouse moved to X: 925, Y: 374
-                Mouse moved to X: 926, Y: 374
-                Mouse moved to X: 926, Y: 374
-                Mouse moved to X: 927, Y: 374
-                Mouse moved to X: 928, Y: 374
-                Mouse moved to X: 929, Y: 374
-                Mouse moved to X: 930, Y: 374
-                Mouse moved to X: 930, Y: 374
-                Mouse moved to X: 931, Y: 374
-                Mouse moved to X: 932, Y: 375
-                Mouse moved to X: 933, Y: 376
-                Mouse moved to X: 934, Y: 377
-                Mouse moved to X: 934, Y: 378
-                Mouse moved to X: 936, Y: 378
-                Mouse moved to X: 937, Y: 380
-                Mouse moved to X: 938, Y: 381
-                Mouse moved to X: 938, Y: 382
-                Mouse moved to X: 938, Y: 382
-                Mouse moved to X: 939, Y: 383
-                Mouse moved to X: 940, Y: 385
-                Mouse moved to X: 940, Y: 386
-                Mouse moved to X: 941, Y: 387
-                Mouse moved to X: 941, Y: 389
-                Mouse moved to X: 941, Y: 390
-                Mouse moved to X: 941, Y: 391
-                Mouse moved to X: 941, Y: 393
-                Mouse moved to X: 941, Y: 394
-                Mouse moved to X: 939, Y: 396
-                Mouse moved to X: 938, Y: 398
-                Mouse moved to X: 935, Y: 400
-                Mouse moved to X: 933, Y: 402
-                Mouse moved to X: 931, Y: 404
-                Mouse moved to X: 926, Y: 409
-                Mouse moved to X: 922, Y: 412
-                Mouse moved to X: 919, Y: 414
-                Mouse moved to X: 914, Y: 416
-                Mouse moved to X: 909, Y: 418
-                Mouse moved to X: 906, Y: 419
-                Mouse moved to X: 904, Y: 420
-                Mouse moved to X: 899, Y: 422
-                Mouse moved to X: 896, Y: 423
-                Mouse moved to X: 892, Y: 424
-                Mouse moved to X: 886, Y: 426
-                Mouse moved to X: 880, Y: 426
-                Mouse moved to X: 874, Y: 427
-                Mouse moved to X: 868, Y: 430
-                Mouse moved to X: 861, Y: 430
-                Mouse moved to X: 853, Y: 431
-                Mouse moved to X: 844, Y: 434
-                Mouse moved to X: 838, Y: 434
-                Mouse moved to X: 830, Y: 435
-                Mouse moved to X: 824, Y: 437
-                Mouse moved to X: 814, Y: 438
-                Mouse moved to X: 807, Y: 438
-                Mouse moved to X: 801, Y: 439
-                Mouse moved to X: 795, Y: 441
-                Mouse moved to X: 793, Y: 441
-                Mouse moved to X: 790, Y: 441
-                Mouse moved to X: 789, Y: 442
-                Mouse moved to X: 788, Y: 442
-                Mouse moved to X: 787, Y: 442
-                Mouse moved to X: 787, Y: 443
-                Mouse moved to X: 786, Y: 443
-                Mouse moved to X: 786, Y: 444
-                Mouse moved to X: 786, Y: 444
-                Mouse moved to X: 785, Y: 444
-                """);
-    }
-    private static void fillUnrefinedPathFormulas(){
-        unrefinedPathsFormulas.add("""
+    private static void fillFormulasPaths(){
+        formulaPaths.add("""
                 -1,3
                 0,1
                 -1,1
@@ -397,7 +309,75 @@ public class MouseMovementPaths {
                 -1,0
                 """);
     }
-
+    private static final String mouseToScreenFormula= """
+            -2,2
+            -1,1
+            -2,1
+            -1,1
+            -3,3
+            -1,1
+            -2,2
+            -2,1
+            -3,1
+            -3,3
+            -4,3
+            -3,2
+            -4,2
+            -5,4
+            -6,4
+            -9,6
+            -9,6
+            -8,6
+            -11,7
+            -15,10
+            -19,11
+            -24,13
+            -26,14
+            -31,15
+            -35,16
+            -36,17
+            -40,18
+            -39,21
+            -37,22
+            -44,28
+            -40,25
+            -38,25
+            -32,22
+            -35,24
+            -33,21
+            -30,22
+            -32,21
+            -28,19
+            -30,21
+            -30,20
+            -27,16
+            -21,16
+            -23,16
+            -21,13
+            -20,14
+            -16,11
+            -13,9
+            -14,6
+            -8,6
+            -7,4
+            -7,3
+            -3,2
+            -1,1
+            -2,1
+            -1,0
+            0,0
+            0,0
+            2,0
+            2,0
+            1,0
+            2,0
+            1,-1
+            3,-1
+            0,0
+            1,0
+            0,0
+            0,-1
+            1,0""";
 }
 
 
