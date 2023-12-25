@@ -1,7 +1,11 @@
 package org.example;
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -12,20 +16,22 @@ public class Main {
         //new MouseTracker();Scanner scanner=new Scanner(System.in);scanner.nextLine();
         //new ScrollerTracker();Scanner scanner=new Scanner(System.in);scanner.nextLine();
 
-        MouseMovementPaths.fillMovementPaths();
-
+        MouseMovementPaths.fillPaths();
         ChromeDriver chromeDriver=Utility.getModifiedChromeDriver();
-        chromeDriver.get("https://books.toscrape.com/");
+        chromeDriver.get("https://store.steampowered.com/app/1172470/Apex_Legends/");
+        WebDriverWait wait = new WebDriverWait(chromeDriver, Duration.ofSeconds(10));
         try {
-            WebElement element=chromeDriver.findElement(By.xpath("//*[@id=\"default\"]/div/div/div/div/section/div[2]/ol/li[10]/article/div[2]/form/button"));
+            WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("/html/body/div[1]/div[7]/div[6]/div[3]/div[2]/div[1]/div[5]/div[2]/div[12]/div[2]/div/a[1]/div")));
             MouseController mouseController=new MouseController(chromeDriver,element);
-            mouseController.moveToElement();
-        }catch (Exception e){
+            mouseController.MouseOperator();
+        }catch (TimeoutException e){
+            System.out.println("the element didnt appear in the given time...");
+        } catch (Exception e){
             e.printStackTrace();
         }
 
         Utility.isConnected();
-        MouseMovementPaths.fillMovementPaths();
+        MouseMovementPaths.fillPaths();
         mainMenu();
 
         //System.out.println(FileLinksExtractor.getAllFileLinks("https://scholar.archive.org/"));
