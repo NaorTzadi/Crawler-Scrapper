@@ -9,6 +9,7 @@ public class WebScrapper {
     private static final String getKeyWordAmountOfOccurrences="2";
     private static final String getImageUrls="3";
     private static final String getVideoUrls="4";
+    private static final String getDownloadFilesUrls="5";
     public static WebScrapperDataBase webScrapperOperator(String option,WebScrapperDataBase data){
         Utility.isConnected();
         if (Utility.isAccessAllowed(data.getUrl())){
@@ -39,6 +40,9 @@ public class WebScrapper {
             } else if (option.equals(getVideoUrls) && data.getVideoLinks()==null) {
                 data.setVideoLinks(SeleniumScrapper.getVideoUrls(data.getUrl()));
             }
+        }
+        if (option.equals(getDownloadFilesUrls)&& data.getDownloadFileLinks()==null){
+            data.setDownloadFileLinks(FileLinksExtractor.getAllDownloadLinks(data.getUrl()));
         }
         return data;
     }
