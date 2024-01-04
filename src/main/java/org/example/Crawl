@@ -5,36 +5,120 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import java.util.*;
-public class Crawl {// how can i make a certain class be accessed only by another specific class
-    // המחלקה הזאת משומשת רק על ידי webCrawler
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+public class Crawl {
+    private static final int THREADS_CAPACITY = 4; // for example since my laptop has 4 cores/threads
+    private static final Set<String> visitedLinks = ConcurrentHashMap.newKeySet();
+    private static final BlockingQueue<String> urlsToCrawl = new LinkedBlockingQueue<>();
+    private static final ExecutorService threadPool = Executors.newFixedThreadPool(THREADS_CAPACITY);
+    private static final AtomicInteger iterationsCount = new AtomicInteger(0);
+    private static boolean shouldStop = false;
+    private static final String userAgent = Utility.getRandomUserAgent();
+    private static Map<String, String> cookies = new HashMap<>();
+    private static String mainDomain;
+    public WebCrawlerDataBase startCrawling(String url, WebCrawlerDataBase webCrawlerData) {
+        //מה קןרה במצב בו אתר מסויים דורש שימוש רצוף בעוגיות במהלך השימוש
+        //יתכנו תוספות נוספות למחלקה
+        //אפשרויות למנוע מהזחל כניסה לקישורים של מודעות קופצות
+        mainDomain = Utility.isMainPageUrl(url) ? url : Utility.getMainDomainUrl(url);
+        urlsToCrawl.add(url);
+        for (int i = 0; i < THREADS_CAPACITY; i++) {
+            threadPool.submit(this::crawl);
+        }
+        threadPool.shutdown();
+        try {
+            threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Restore interrupted status
+        }
+        webCrawlerData.setUniqueLinksList(new ArrayList<>(visitedLinks));
+        webCrawlerData.setUniqueLinksCount(visitedLinks.size());
+        webCrawlerData.setIterationsCount(iterationsCount.get());
+        return webCrawlerData;
+    }
+    private void crawl() {
+        while (!shouldStop || !urlsToCrawl.isEmpty()) {
+            String url = urlsToCrawl.poll();
+            if (url == null) {return;}
+            iterationsCount.incrementAndGet();
+            if (visitedLinks.add(url)) {
+                System.out.print("\rNumber of links crawled so far: " + visitedLinks.size());
+                if (visitedLinks.size() % 1500 == 0) {
+                    shouldProceed();
+                }
+                List<String> links = getLinksFromUrl(url);
+                urlsToCrawl.addAll(links);
+            }
+        }
+    }
+    private List<String> getLinksFromUrl(String url) {
+        List<String> links = new ArrayList<>();
+        try {
+            Connection.Response response = Jsoup.connect(url).userAgent(userAgent).cookies(new HashMap<>(cookies)).execute();
+            cookies.putAll(response.cookies());
+            Document doc = response.parse();
+            Elements linkElements = doc.select("a[href]"); // Select all hyperlinks
+            for (Element linkElement : linkElements) {
+                String link = linkElement.attr("abs:href"); // Extract absolute URL
+                if (isLinkRelatedToTheWebsite(link)) {
+                    links.add(link);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error fetching links from " + url + ": " + e.getMessage());
+        }
+        return links;
+    }private static void shouldProceed() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("\nNumber of links crawled: " + iterationsCount.get());
+        System.out.println("Do you wish to continue? (yes/no): ");
+        String decision = scanner.nextLine().trim().toLowerCase();
+        if ("no".equals(decision)) {
+            shouldStop = true;
+        }
+    }
+    private boolean isLinkRelatedToTheWebsite(String link) {
+        return !link.isEmpty() && link.contains(mainDomain) && link.length() <= 150;
+    }
+    /*
+    package org.example;
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import java.util.*;
+public class Crawl {
     private static HashSet<String> visitedLinks= new HashSet<>();
     private static boolean shouldStop=false;
     private static int iterationsCount=0;
     private static Map<String, String> cookies = new HashMap<>();
     private static final String userAgent=Utility.getRandomUserAgent();
-
+    private static String mainDomain;
     public WebCrawlerDataBase startCrawling(String url, WebCrawlerDataBase webCrawlerData){
         // מה קןרה במצב בו אתר מסויים דורש שימוש רצוף בעוגיות במהלך השימוש
         // יתכנו תוספות נוספות למחלקה
         // אפשרויות למנוע מהזחל כניסה לקישורים של מודעות קופצות
+        if (!Utility.isMainPageUrl(url)){mainDomain=Utility.getMainDomainUrl(url);}else {mainDomain=url;}
         crawl(url);
-        webCrawlerData.setLinksList(new ArrayList<>(visitedLinks));
+
+        webCrawlerData.setUniqueLinksList(new ArrayList<>(visitedLinks));
         webCrawlerData.setUniqueLinksCount(new ArrayList<>(visitedLinks).size());
         webCrawlerData.setIterationsCount(iterationsCount);
         return webCrawlerData;
     }
-
     private static void crawl(String url) {
         if(shouldStop){return;}
         iterationsCount++;
         if (visitedLinks.contains(url)) {return;}
-        visitedLinks.add(url); // Mark this URL as visited
+        visitedLinks.add(url);
         if (visitedLinks.size() % 1500 == 0) {shouldProceed();}
 
-        System.out.print("\rNumber of links counted so far: " + visitedLinks.size());
-        List<String> links = getLinksFromUrl(url); // Fetch links from the URL
+        System.out.print("\rNumber of links crawled so far: " + visitedLinks.size());
+        List<String> links = getLinksFromUrl(url);
         for (String link : links) {
-            crawl(link); // Recursive call for each link
+            crawl(link);
         }
     }
     private static List<String> getLinksFromUrl(String url) {
@@ -46,7 +130,7 @@ public class Crawl {// how can i make a certain class be accessed only by anothe
             Elements linkElements = doc.select("a[href]");  // Select all hyperlinks
             for (Element linkElement : linkElements) {
                 String link = linkElement.attr("abs:href");  // Extract absolute URL
-                if (!link.isEmpty()) {
+                if (isLinkRelatedToTheWebsite(link)) {
                     links.add(link);
                 }
             }
@@ -72,4 +156,83 @@ public class Crawl {// how can i make a certain class be accessed only by anothe
         shouldStop=decision.equals("0");
         iterationsCount--;
     }
+    private static boolean isLinkRelatedToTheWebsite(String link){
+        if (link.isEmpty()||(!link.contains(mainDomain) && link.length()>150)){
+         return false;   // כנראה חלון קופץ של איזו מודעה כי אינו מכיל את הכתובת הראשית של האתר וארוך מדי
+        }
+        return true;
+    }
+     */
+    /*package org.example;
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import java.util.*;
+import java.util.concurrent.*;
+public class Crawl {
+    private static final int THREADS_CAPACITY = 4;
+    private static final Set<String> visitedLinks = ConcurrentHashMap.newKeySet();
+    private static final BlockingQueue<String> urlsToCrawl = new LinkedBlockingQueue<>();
+    private static final ExecutorService threadPool = Executors.newFixedThreadPool(THREADS_CAPACITY);
+    private static int iterationsCount=0;
+    private static boolean shouldStop = false;
+    private static final String userAgent = Utility.getRandomUserAgent();
+    private static Map<String, String> cookies = new HashMap<>();
+    private static String mainDomain;
+
+    public WebCrawlerDataBase startCrawling(String url, WebCrawlerDataBase webCrawlerData) {
+        מה קןרה במצב בו אתר מסויים דורש שימוש רצוף בעוגיות במהלך השימוש//
+       יתכנו תוספות נוספות למחלקה//
+        אפשרויות למנוע מהזחל כניסה לקישורים של מודעות קופצות//
+        mainDomain = Utility.isMainPageUrl(url) ? url : Utility.getMainDomainUrl(url);
+        urlsToCrawl.add(url);
+        for (int i = 0; i < THREADS_CAPACITY; i++) {
+            threadPool.submit(this::crawl);
+        }
+        threadPool.shutdown();
+        try {
+            threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Restore interrupted status
+        }
+        webCrawlerData.setUniqueLinksList(new ArrayList<>(visitedLinks));
+        webCrawlerData.setUniqueLinksCount(visitedLinks.size());
+        webCrawlerData.setIterationsCount(iterationsCount);
+        return webCrawlerData;
+    }
+    private void crawl() {
+        while (!shouldStop && (!urlsToCrawl.isEmpty() || !threadPool.isTerminated())) {
+            String url = urlsToCrawl.poll();
+            if (url != null && visitedLinks.add(url)) {
+                System.out.print("\rNumber of links crawled so far: " + visitedLinks.size());
+                List<String> links = getLinksFromUrl(url);
+                urlsToCrawl.addAll(links);
+            }
+        }
+    }
+    private List<String> getLinksFromUrl(String url) {
+        List<String> links = new ArrayList<>();
+        try {
+            Connection.Response response = Jsoup.connect(url).userAgent(userAgent).cookies(new HashMap<>(cookies)).execute();
+            cookies.putAll(response.cookies());
+            Document doc = response.parse();
+            Elements linkElements = doc.select("a[href]"); // Select all hyperlinks
+            for (Element linkElement : linkElements) {
+                String link = linkElement.attr("abs:href"); // Extract absolute URL
+                if (isLinkRelatedToTheWebsite(link)) {
+                    links.add(link);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error fetching links from " + url + ": " + e.getMessage());
+        }
+        return links;
+    }
+    private boolean isLinkRelatedToTheWebsite(String link) {
+        return !link.isEmpty() && link.contains(mainDomain) && link.length() <= 150;
+    }
+}
+*/
 }
