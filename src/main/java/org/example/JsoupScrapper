@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Scanner;
 public class JsoupScrapper extends WebScrapper {
     public static WebScrapperDataBase getAllScrapedInfo(String url){
-        return new WebScrapperDataBase(url,getContentType(url),getImageUrls(url),getVideoUrls(url),null);
+        return new WebScrapperDataBase(url,getContentType(url),getImageUrls(url),getVideoUrls(url),FileLinksExtractor.getAllDownloadLinks(url),null);
     }
 
     public static HashMap<String, Integer> getKeyWordAmountOfOccurrences(String url, HashMap<String, Integer> wordAppearanceCount) {
