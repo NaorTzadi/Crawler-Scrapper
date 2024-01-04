@@ -41,27 +41,24 @@ public class FileLinksExtractor {
         suspectedLinks.removeAll(downloadLinks);
         downloadLinks = downloadLinks.stream().filter(link -> link.length() <= 200 && !link.contains("#")).collect(Collectors.toSet());
         for(String link: suspectedLinks){
-            if (isSuspectedDownloadLinkADownloadLik(link,chromeDriver)){ // כאן יכול להיות הרבה בקשות בזמן קצר ובכך להעלות את החשד
+            if (isSuspectedDownloadLinkADownloadLink(link,chromeDriver)){ // כאן יכול להיות הרבה בקשות בזמן קצר ובכך להעלות את החשד
                 downloadLinks.add(link);
             }
         }
         chromeDriver.close();
         return downloadLinks;
     }
-    public static boolean isSuspectedDownloadLinkADownloadLik(String link, WebDriver driver) {
+    public static boolean isSuspectedDownloadLinkADownloadLink(String link, WebDriver driver) {
         try {
             driver.get(link);
-            // Wait for the page to load
             new WebDriverWait(driver, Duration.ofSeconds(10)).until(
                     webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete")
             );
-            List<WebElement> captchaElements = driver.findElements(By.xpath("//*[contains(text(),'CAPTCHA')]"));
-            captchaElements.addAll(driver.findElements(By.xpath("//*[contains(text(),'robot')]")));
 
-            if (captchaElements.size()>0) {
-                //for (WebElement element : captchaElements) {new MouseController(driver,element);}
-
-                return true; // Assume it's a download link if CAPTCHA is detected
+            if (Utility.isRobotCheckBoxSuspectedToBePresent(link)) {
+                if (Utility.isRobotCheckBoxPresent(driver)){
+                    return true;
+                }
             } else {
                 // Check for download indicators in headers using a head request as before
                 URL url = new URL(link);
