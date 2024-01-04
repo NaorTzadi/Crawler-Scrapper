@@ -2,30 +2,34 @@ package org.example;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
-
 public class WebScrapperDataBase {
+    // לוודא אם להשתמש ב-Set או List
     private String url;
     private String contentType;
     private ArrayList<String> imageLinks;
     private ArrayList<String> videoLinks;
+    private Set<String> downloadFileLinks;
     private HashMap<String,Integer> countedWordsAppearance;
 
-    public WebScrapperDataBase(String url,String contentType,ArrayList<String> imageLinks,ArrayList<String> videoLinks,HashMap<String,Integer> countedWordsAppearance){
+    public WebScrapperDataBase(String url,String contentType,ArrayList<String> imageLinks,ArrayList<String> videoLinks,Set<String> downloadFileLinks,HashMap<String,Integer> countedWordsAppearance){
         this.url=url;
         this.imageLinks=imageLinks;
         this.videoLinks=videoLinks;
+        this.downloadFileLinks=downloadFileLinks;
         this.countedWordsAppearance=countedWordsAppearance;
     }
     public String getUrl(){return url;}
     public String getContentType(){return contentType;}
     public ArrayList<String> getImageLinks(){return imageLinks;}
     public ArrayList<String> getVideoLinks(){return videoLinks;}
+    public Set<String> getDownloadFileLinks(){return downloadFileLinks;}
     public HashMap<String, Integer> getCountedWordsAppearance(){return countedWordsAppearance;}
 
     public void setUrl(String url){this.url=url;}
     public void setContentType(String contentType){this.contentType=contentType;}
     public void setImageLinks(ArrayList<String> imageLinks){this.imageLinks=imageLinks;}
     public void setVideoLinks(ArrayList<String> videoLinks){this.videoLinks=videoLinks;}
+    public void setDownloadFileLinks(Set<String> downloadFileLinks){this.downloadFileLinks=downloadFileLinks;}
     public void setCountedWordsAppearance(HashMap<String,Integer> countedWordsAppearance){this.countedWordsAppearance=countedWordsAppearance;}
 
     @Override
@@ -34,6 +38,7 @@ public class WebScrapperDataBase {
                 "\n url='" + url + '\'' +
                 ",\n imageLinks=" + imageLinks +
                 ",\n videoLinks=" + videoLinks +
+                ",\n downloadFileLinks="+downloadFileLinks+
                 ",\n wordsAppearance="+countedWordsAppearance+
                 "\n}";
     }
