@@ -39,8 +39,9 @@ public class MouseController {
         //System.out.println(getMouseLocationFromTheWebPageWindowInSimpleTerms());
         //System.exit(1);
 
-        //moveMouse(new Point(857,652),false);
-        //moveMouse(new Point(845,620),true);
+        /*Point testPoint=new Point(859,590);
+        moveMouse(new Point(891,623),false);
+        moveMouse(testPoint,true);*/
 
         moveMouse(getFalseDestinationInOrderToMimicHumanLikeInaccuracy(),false);
         moveMouse(getAbsolutePosition(),true);
@@ -175,8 +176,8 @@ public class MouseController {
         int browserY = ((Number) js.executeScript("return window.screenY;")).intValue();
         int viewWidth = ((Number) js.executeScript("return window.innerWidth;")).intValue();
         int viewHeight = ((Number) js.executeScript("return window.innerHeight;")).intValue();
-        // Adjust for the browser's chrome (UI elements like address bar, tabs, etc.)
         int browserChromeHeight = 100; // This is an estimated value and might need adjustment
+        //what about the lower bar of windows?
         boolean isMouseXOverPage = mouseLocation.x >= browserX && mouseLocation.x <= (browserX + viewWidth);
         boolean isMouseYOverPage = mouseLocation.y >= (browserY + browserChromeHeight) && mouseLocation.y <= (browserY + viewHeight);
         return isMouseXOverPage && isMouseYOverPage;
@@ -221,7 +222,7 @@ public class MouseController {
             robot.mouseMove(currentLocation.x+point.x,currentLocation.y+point.y);
             Thread.sleep(getRandomPause());
             counter++;
-            if (counter%10==0 && isMouseOnWebPageWindow()){ // בדוק כל 10 צעדים
+            if (counter%10==0 && isMouseOnWebPageWindow()){ // בדוק כל 10 צעדים אם העכבר כבר על העמוד
                 return;
             }
         }
@@ -337,15 +338,11 @@ public class MouseController {
             maximizeWindowPage();
         }
     }
-    private boolean isElementClickable() { // לוודא שכשאנחנו עושים את הבדיקה הזאת אנחנו לא מוזיזים את העכבר דרך סלניום או הרובוט
+    private boolean isElementClickable() {
         if (!element.isDisplayed() || !element.isEnabled()) {return false;}
         String script = "var rect = arguments[0].getBoundingClientRect();" +
                 "return (rect.width > 0 && rect.height > 0 &&" +
                 "document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2) === arguments[0]);";
         return (Boolean) ((JavascriptExecutor) driver).executeScript(script, element);
-    }
-    private Point getTheDistanceTheMouseNeedsToTravelToGetToTheDestination(Point destination){ // למחוק-רק לצורך בדיקה
-        java.awt.Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
-        return new Point(Math.abs(mouseLocation.x-destination.x),Math.abs(mouseLocation.y-destination.y));
     }
 }
