@@ -1,7 +1,5 @@
 package org.example;
-import org.openqa.selenium.By;
-import org.openqa.selenium.TimeoutException;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -16,19 +14,19 @@ public class Main {
         //new MouseTracker();Scanner scanner=new Scanner(System.in);scanner.nextLine();
         //new ScrollerTracker();Scanner scanner=new Scanner(System.in);scanner.nextLine();
 
-        MouseMovementPaths.fillPaths();
+        /*MouseMovementPaths.fillPaths();
         ChromeDriver chromeDriver=Utility.getModifiedChromeDriver();
         chromeDriver.get("https://store.steampowered.com/app/1172470/Apex_Legends/");
         WebDriverWait wait = new WebDriverWait(chromeDriver, Duration.ofSeconds(10));
         try {
-            WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("/html/body/div[1]/div[7]/div[6]/div[3]/div[2]/div[1]/div[5]/div[2]/div[12]/div[2]/div/a[1]/div")));
+            WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("/html/body/div[1]/div[7]/div[6]/div[3]/div[2]/div[1]/div[5]/div[2]/div[12]/div[2]/div/a[1]/img")));
             MouseController mouseController=new MouseController(chromeDriver,element);
             mouseController.MouseOperator();
         }catch (TimeoutException e){
             System.out.println("the element didnt appear in the given time...");
         } catch (Exception e){
             e.printStackTrace();
-        }
+        }*/
 
         Utility.isConnected();
         MouseMovementPaths.fillPaths();
@@ -44,6 +42,7 @@ public class Main {
         //for(String url:Utility.getUrlsToTest()){System.out.println( WebScrapper.getContentType(url));} //עובד
         //for(String url:Utility.getUrlsToTest()){System.out.println(Utility.isAccessAllowed(url));}//עובד
     }
+
     private static void mainMenu(){
         final String option1="1"; final String option2="2";final String option3="3";
         Scanner scanner=new Scanner(System.in);
@@ -218,26 +217,9 @@ public class Main {
                 System.out.println(data);
             }
         }
-        if (!Utility.isMainPageUrl(url)){
-            String decision;
-            final String getMainWebsiteUrl="1";final String keepCurrentUrl="2";
-            do {
-                System.out.println("the url you gave is not the website main url!");
-                System.out.println("press 1 to get the main website url.");
-                System.out.println("press 2 to proceed with the current url.");
-                decision=scanner.nextLine();
-            }while (!decision.equals(getMainWebsiteUrl) && !decision.equals(keepCurrentUrl));
-            if (decision.equals(getMainWebsiteUrl)){
-                String mainWebsiteUrl=Utility.getMainDomainUrl(url);
-                if (mainWebsiteUrl!=null && !mainWebsiteUrl.isEmpty()){
-                    url=mainWebsiteUrl;
-                }else {
-                    System.out.println("could not find main website url, continuing with current url.");
-                }
-            }
-        }
+        if (!Utility.isMainPageUrl(url)){url=Utility.shouldUseMainPageUrl(url);}
         WebCrawlerDataBase webCrawlerData=WebCrawler.getAnalyzedInfo(url);
-        System.out.println(webCrawlerData);
+        System.out.println(webCrawlerData);    //למחוק אחרי בדיקה
         webCrawlerDataBase.add(webCrawlerData);
         System.out.println();webCrawlerOptionsMenu();
     }
@@ -302,7 +284,7 @@ public class Main {
         if(decision.matches("^[0-9]+$")){
             int decisionToInt=Integer.parseInt(decision);
             if(decisionToInt==0){
-                mainMenu();}
+                webCrawlerOptionsMenu();}
             if(decisionToInt<counter ||decisionToInt>1){
                 for(WebCrawlerDataBase data:webCrawlerDataBase){
                     if(data.getUrl().equals(linksMenu.get(decisionToInt))){
