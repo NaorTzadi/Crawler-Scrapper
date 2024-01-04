@@ -1,4 +1,7 @@
 package org.example;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import java.io.BufferedReader;
@@ -74,6 +77,17 @@ public class Utility {
             return false;
         }
     }
+    public static ChromeDriver getModifiedChromeDriver() {
+        System.setProperty("webdriver.openqa.driver", "path/to/chromedriver.exe");
+        ChromeOptions options = new ChromeOptions();
+        //options.addArguments("--headless"); // בלתי נראה
+        options.addArguments("--lang=en");
+        options.addArguments("--disable-gpu");
+        options.addArguments("--disable-notifications");
+        options.addArguments("--enable-automation");
+        options.addArguments("user-agent=" + Utility.getRandomUserAgent());
+        return new ChromeDriver(options);
+    }
     public static String getRandomUserAgent(){
         String[] userAgents = new String[10];
         userAgents[0] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36";
@@ -120,15 +134,35 @@ public class Utility {
         }while (!Utility.isValidUrl(url));
         return url;
     }
+    public static String shouldUseMainPageUrl(String url){
+        Scanner scanner=new Scanner(System.in);
+        String decision;
+        final String getMainWebsiteUrl="1";final String keepCurrentUrl="2";
+        do {
+            System.out.println("the url you gave is not the website main url!");
+            System.out.println("press 1 to get the main website url.");
+            System.out.println("press 2 to proceed with the current url.");
+            decision=scanner.nextLine();
+        }while (!decision.equals(getMainWebsiteUrl) && !decision.equals(keepCurrentUrl));
+        if (decision.equals(getMainWebsiteUrl)) {
+            String mainWebsiteUrl = Utility.getMainDomainUrl(url);
+            if (mainWebsiteUrl != null && !mainWebsiteUrl.isEmpty()) {
+                return mainWebsiteUrl;
+            } else {
+                System.out.println("could not find main website url, continuing with current url.");
+            }
+        }
+        return url;
+    }
+    public static boolean isMainPageUrl(String url) {try {return !new URL(url).getPath().matches(".*/[^/]+/[^/]+.*");} catch (Exception e) {return false;}}
     public static String getMainDomainUrl(String url) {
         try {
             URL parsedUrl = new URL(url);
             String protocol = parsedUrl.getProtocol();
             String host = parsedUrl.getHost();
             int port = parsedUrl.getPort();
-
             String mainPageUrl = protocol + "://" + host;
-            if (port != -1) { // If a port is specified, include it in the URL
+            if (port != -1) {
                 mainPageUrl += ":" + port;
             }
             return mainPageUrl;
@@ -136,18 +170,25 @@ public class Utility {
             return null;
         }
     }
-    public static ChromeDriver getModifiedChromeDriver() {
-        System.setProperty("webdriver.openqa.driver", "path/to/chromedriver.exe");
-        ChromeOptions options = new ChromeOptions();
-        //options.addArguments("--headless");
-        options.addArguments("--disable-gpu");
-        options.addArguments("--disable-notifications");
-        options.addArguments("--enable-automation");
-        options.addArguments("user-agent=" + Utility.getRandomUserAgent());
-        return new ChromeDriver(options);
+    public static boolean isRobotCheckBoxSuspectedToBePresent(String url){
+        url=url.toLowerCase();
+        if (url.contains("register")||url.contains("sign up")||url.contains("sign in")||
+                (url.contains("reset")&& url.contains("password"))||url.contains("checkout")||
+                url.contains("download")||url.contains("payment")||url.contains("subscription")
+        ||(url.contains("create")&&url.contains("account"))){
+            return true;
+        }
+        return false;
     }
-    public static boolean isMainPageUrl(String url) {try {return !new URL(url).getPath().matches(".*/[^/]+/[^/]+.*");} catch (Exception e) {return false;}}
-
+    public static boolean isRobotCheckBoxPresent(WebDriver driver){
+        java.util.List<WebElement> allElements = driver.findElements(By.xpath("//*"));
+        for (WebElement element : allElements) {
+            if (element.getAttribute("outerHTML").contains("g-recaptcha-response")) {
+                return true;
+            }
+        }
+        return false;
+    }
     public static ArrayList<String> getUrlsToTest(){ // רק לצורך בדיקות
         ArrayList<String> urlsToTest=new ArrayList<>();
         urlsToTest.add("https://www.pexels.com/");
