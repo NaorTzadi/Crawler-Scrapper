@@ -48,19 +48,61 @@ public class FileLinksExtractor {
         chromeDriver.close();
         return downloadLinks;
     }
+    public static Set<String> extractHyperLinks(WebDriver driver) {
+        Set<String> allLinks = new HashSet<>();
+        extractAllHyperLinks(driver, allLinks);
+        //extractAllEmbeddedLinks(driver,allLinks); //צריך לבדוק שזה עובד
+        List<WebElement> iframes = driver.findElements(By.tagName("iframe"));
+        for (WebElement iframe : iframes) {
+            driver.switchTo().frame(iframe);
+            extractAllHyperLinks(driver, allLinks);
+            driver.switchTo().defaultContent();
+        }
+        return allLinks;
+    }
+    private static void extractAllHyperLinks(WebDriver driver, Set<String> allLinks) {
+        List<WebElement> links = driver.findElements(By.tagName("a"));
+        for (int i = 0; i < links.size(); i++) {
+            try {
+                WebElement link = links.get(i);
+                String href = link.getAttribute("href");
+                if (href != null) {
+                    allLinks.add(href);
+                }
+            } catch (StaleElementReferenceException e) {
+                links = driver.findElements(By.tagName("a"));
+                i--;
+            }
+        }
+        List<WebElement> buttons = driver.findElements(By.cssSelector("[data-jam-url]"));
+        for (WebElement button : buttons) {
+            String dataUrl = button.getAttribute("data-jam-url");
+            if (dataUrl != null && !allLinks.contains(dataUrl)) {
+                allLinks.add(dataUrl);
+            }
+        }
+    }
+    private static void extractAllEmbeddedLinks(WebDriver driver, Set<String> allLinks) {//צריך לבדוק שזה עובד
+        List<WebElement> embedElements = driver.findElements(By.tagName("embed"));
+        for (WebElement element : embedElements) {
+            String src = element.getAttribute("src");
+            System.out.println("embedded link: "+src);
+            if (src != null) {
+                allLinks.add(src);
+            }
+        }
+    }
     public static boolean isSuspectedDownloadLinkADownloadLink(String link, WebDriver driver) {
         try {
             driver.get(link);
             new WebDriverWait(driver, Duration.ofSeconds(10)).until(
                     webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete")
             );
-
             if (Utility.isRobotCheckBoxSuspectedToBePresent(link)) {
                 if (Utility.isRobotCheckBoxPresent(driver)){
                     return true;
                 }
             } else {
-                // Check for download indicators in headers using a head request as before
                 URL url = new URL(link);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("HEAD");
@@ -100,73 +142,4 @@ public class FileLinksExtractor {
                 link.contains("action=download") || link.contains("getfile=")
                 || link.contains("downloadfile=") || link.contains("token=");
     }
-    public static Set<String> extractHyperLinks(WebDriver driver) {
-        Set<String> allLinks = new HashSet<>();
-        extractAllHyperLinks(driver, allLinks);
-        List<WebElement> iframes = driver.findElements(By.tagName("iframe"));
-        for (WebElement iframe : iframes) {
-            driver.switchTo().frame(iframe);
-            extractAllHyperLinks(driver, allLinks);
-            driver.switchTo().defaultContent();
-        }
-        return allLinks;
-    }
-    private static void extractAllHyperLinks(WebDriver driver, Set<String> allLinks) {
-        List<WebElement> links = driver.findElements(By.tagName("a"));
-        for (int i = 0; i < links.size(); i++) {
-            try {
-                WebElement link = links.get(i);
-                String href = link.getAttribute("href");
-                if (href != null) {
-                    allLinks.add(href);
-                }
-            } catch (StaleElementReferenceException e) {
-                links = driver.findElements(By.tagName("a"));
-                i--;
-            }
-        }
-        List<WebElement> buttons = driver.findElements(By.cssSelector("[data-jam-url]"));
-        for (WebElement button : buttons) {
-            String dataUrl = button.getAttribute("data-jam-url");
-            if (dataUrl != null && !allLinks.contains(dataUrl)) {
-                allLinks.add(dataUrl);
-            }
-        }
-    }
-
- /*   public static void extractEmbeddedPdfLinks(WebDriver driver, List<String> pdfLinks) {
-        List<WebElement> pdfViewerElements = driver.findElements(By.xpath("//embed[@type='application/pdf']"));
-        pdfViewerElements.addAll(driver.findElements(By.xpath("//iframe[contains(@src, 'pdf')]")));
-        for (WebElement element : pdfViewerElements) {
-            String src = element.getAttribute("src");
-            System.out.println("embedded link: "+src);
-            if (src != null && !pdfLinks.contains(src)) {
-                pdfLinks.add(src);
-            }
-        }
-    }
-    private static void extractEmbeddedFileLinks1(WebDriver driver, List<String> fileLinks, String extension) { // extensions לפי embedded files
-        List<WebElement> fileViewerElements = driver.findElements(By.xpath("//embed[contains(@src, '" + extension + "')]"));
-        for (WebElement element : fileViewerElements) {
-            String src = element.getAttribute("src");
-            System.out.println("embedded link: "+src);
-            if (src != null && !fileLinks.contains(src)) {
-                fileLinks.add(src);
-            }
-        }
-    }
-    private static void extractEmbeddedFileLinks2(WebDriver driver, List<String> fileLinks) { // כל embedded files
-        List<WebElement> embedElements = driver.findElements(By.tagName("embed"));
-        for (WebElement element : embedElements) {
-            String src = element.getAttribute("src");
-            System.out.println("embedded link: "+src);
-            if (src != null && !fileLinks.contains(src)) {
-                fileLinks.add(src);
-            }
-        }
-    }*/
-
-
-
-
 }
