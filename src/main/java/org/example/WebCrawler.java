@@ -13,7 +13,7 @@ public class WebCrawler {
     public static WebCrawlerDataBase getAnalyzedInfo(String url){
         Utility.isConnected();Utility.isAccessAllowed(url);
         WebCrawlerDataBase webCrawlerData=new WebCrawlerDataBase(url,-1,-1, new ArrayList<>(),null,null,null);
-        webCrawlerData=new Crawl().startCrawling(url,webCrawlerData);
+        webCrawlerData=new Crawler().startCrawling(url,webCrawlerData);
         webCrawlerData.setLanguage(getLanguageFromHTML(url));
         webCrawlerData.setUrlIPAddress(getIPAddressFromUrl(url));
         webCrawlerData.setLocation(getServerLocationFromIPAddress(webCrawlerData.getUrlIPAddress()));
