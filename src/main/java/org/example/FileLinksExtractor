@@ -7,14 +7,12 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
-
 public class FileLinksExtractor {
-    // צריך למצוא עוד דרכים לצמצום כמות הלינקים החשודים
-    // צריך לנסות להפחית מהמשקל של הפונקציה isDownloadLink
-    // יכול להיות שצריך להשתמש בסלניום ב-isDownloadLink כדי להוריד מהחשד של אתרים
-    // בסיום לזכור להעביר ל- private מה שצריך
-    static String[] downloadExtensions = new String[]{".pdf", ".doc", ".docx", ".xls", ".xlsx", ".zip", ".rar",".pptx",".mp3",".mp4"};
-
+    //TODO: צריך למצוא עוד דרכים לצמצום כמות הלינקים החשודים
+    //TODO: צריך לנסות להפחית מהמשקל של הפונקציה isSuspectedDownloadLinkADownloadLink
+    //TODO: יכול להיות שצריך להשתמש בסלניום ב-isDownloadLink כדי להוריד מהחשד של אתרים
+    //TODO: בסיום לזכור להעביר ל- private מה שצריך
+    static final String[] downloadExtensions = new String[]{".pdf", ".doc", ".docx", ".xls", ".xlsx", ".zip", ".rar",".pptx",".mp3",".mp4"};
     public static Set<String> getAllDownloadLinks(String url){
         ChromeDriver chromeDriver = Utility.getModifiedChromeDriver();
         chromeDriver.get(url);
